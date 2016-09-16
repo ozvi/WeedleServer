@@ -53,7 +53,7 @@ var upload = multer({ dest: 'uploads/' })
 
 // File input field name is simply 'file'
 
-app.post('/file_upload', upload.single('avatar'), function (req, res, next) {
+app.post('/file_upload', upload.single('png'), function (req, res, next) {
     if(req.file.exists()){
         console.log('file received!');
     }else{
