@@ -6,6 +6,7 @@ var app = express();
 var requestIp = require('request-ip');
 var firebase = require('firebase');
 var multer  = require('multer')
+var fs  = require('fs')
 const PORT = 9450;
 
 /*
@@ -51,9 +52,11 @@ app.listen(app.get('port'),function(){
 var upload = multer({ dest: '/tmp/'});
 
 // File input field name is simply 'file'
-app.post('/file_upload', upload.single('file'), function(req, res) {
+app.post('/file_upload', upload.single('recfile'), function(req, res) {
     console.log("on post image");
-    var file = __dirname + '/' + req.file.filename;
+/*    var targetPath = req.file.path;
+var src = fs*/
+   var file = __dirname + '/' + req.file.filename;
     fs.rename(req.file.path, file, function(err) {
         if (err) {
             console.log(err);
