@@ -54,9 +54,16 @@ var upload = multer({ dest: '/tmp/'});
 // File input field name is simply 'file'
 app.post('/file_upload', upload.single('recfile'), function(req, res) {
     console.log("on post image");
-/*    var targetPath = req.file.path;
-var src = fs*/
-   var file = __dirname + '/' + req.file.filename;
+    var targetPath = req.file.path;
+
+    var target_path = 'file_upload/' + req.file.originalname;
+    var src = fs.createReadStream(tmp_path);
+
+    var dest = fs.createWriteStream(target_path);
+    src.pipe(dest);
+    src.on('end', function() { res.render('complete'); });
+    src.on('error', function(err) { res.render('error'); });
+/*   var file = __dirname + '/' + req.file.filename;
     fs.rename(req.file.path, file, function(err) {
         if (err) {
             console.log(err);
@@ -69,7 +76,7 @@ var src = fs*/
             var stats =
             console.log("file name: " + req.file.filename);
         }
-    });
+    });*/
 });
 
 
