@@ -49,20 +49,37 @@ app.listen(app.get('port'),function(){
     console.log('server started on port itzik '+ app.get('port'));
 });
 
-var upload = multer({ dest: 'file_upload/'});
+var upload = multer({ dest: 'uploads/' })
 
 // File input field name is simply 'file'
-app.post('/file_upload', upload.single('recfile'), function(req, res) {
+
+app.post('/file_upload', upload.single('avatar'), function (req, res, next) {
+    if(req.file.exists()){
+        console.log('file received!');
+    }else{
+        console.log('file doesn\'t exist!');
+    }
+    // req.body will hold the text fields, if there were any
+})
+
+
+
+
+
+/*
+ var type = upload.single('recfile')
+app.post('/file_upload', type, function(req, res) {
     console.log("on post image");
     var targetPath = req.file.path;
 
-    var target_path = 'file_upload/' + req.file.originalname;
+    var target_path = 'file_upload/' + req .file.originalname;
     var src = fs.createReadStream(tmp_path);
 
     var dest = fs.createWriteStream(target_path);
     src.pipe(dest);
     src.on('end', function() { res.render('complete'); });
-    src.on('error', function(err) { res.render('error'); });
+    src.on('error', function(err) { res.render('error'); });*/
+
 /*   var file = __dirname + '/' + req.file.filename;
     fs.rename(req.file.path, file, function(err) {
         if (err) {
@@ -76,8 +93,8 @@ app.post('/file_upload', upload.single('recfile'), function(req, res) {
             var stats =
             console.log("file name: " + req.file.filename);
         }
-    });*/
-});
+    });
+});*/
 
 
 
