@@ -6,7 +6,7 @@ var app = express();
 var requestIp = require('request-ip');
 var firebase = require('firebase');
 var multer  = require('multer')
-var fs  = require('fs')
+var fs = require('fs');
 const PORT = 9450;
 
 /*
@@ -54,11 +54,10 @@ var upload = multer({ dest: 'uploads/' })
 // File input field name is simply 'file'
 
 app.post('/file_upload', upload.single('png'), function (req, res, next) {
-    if(req.file.exists()){
         console.log('file received!');
-    }else{
-        console.log('file doesn\'t exist!');
-    }
+        fs.rename(req.file.path, 'itzik', function(err) {
+            if ( err ) console.log('ERROR: ' + err);
+        });
     // req.body will hold the text fields, if there were any
 })
 
