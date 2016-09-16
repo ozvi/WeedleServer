@@ -5,6 +5,7 @@ var express = require('express');
 var app = express();
 var requestIp = require('request-ip');
 var firebase = require('firebase');
+var multer  = require('multer')
 const PORT = 9450;
 
 /*
