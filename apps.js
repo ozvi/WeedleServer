@@ -54,11 +54,7 @@ var upload = multer({ dest: 'uploads/' })
 // File input field name is simply 'file'
 
 app.post('/file_upload', upload.single('png'), function (req, res, next) {
-        console.log('file received!');
-        fs.rename(req.file.path,  '/uploads/itzik.png', function(err) {
-            if ( err ) console.log('ERROR: ' + err);
-        });
-    // req.body will hold the text fields, if there were any
+        console.log('image file received!');
 })
 
 
