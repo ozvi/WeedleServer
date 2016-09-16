@@ -49,7 +49,7 @@ app.listen(app.get('port'),function(){
     console.log('server started on port itzik '+ app.get('port'));
 });
 
-var upload = multer({ dest: '/tmp/'});
+var upload = multer({ dest: '/file_upload/'});
 
 // File input field name is simply 'file'
 app.post('/file_upload', upload.single('recfile'), function(req, res) {
