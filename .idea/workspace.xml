@@ -116,8 +116,12 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scratches" />
+      <pane id="Scratches">
+        <subPane />
+      </pane>
       <pane id="Scope">
+        <subPane subId="Problems" />
+        <subPane subId="Changed Files" />
         <subPane subId="Project Files">
           <PATH>
             <PATH_ELEMENT USER_OBJECT="Root">
@@ -130,6 +134,7 @@
             </PATH_ELEMENT>
           </PATH>
         </subPane>
+        <subPane subId="Default" />
       </pane>
     </panes>
   </component>
@@ -209,12 +214,12 @@
       <updated>1473986724628</updated>
       <workItem from="1473986726230" duration="244000" />
       <workItem from="1473987001305" duration="1763000" />
-      <workItem from="1473990247520" duration="1181000" />
+      <workItem from="1473990247520" duration="1345000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="3188000" />
+    <option name="totallyTimeSpent" value="3352000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="0" />
