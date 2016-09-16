@@ -6,6 +6,7 @@ var app = express();
 var requestIp = require('request-ip');
 var firebase = require('firebase');
 var multer  = require('multer')
+var upload = multer({ dest: 'uploads/' })
 var fs = require('fs');
 const PORT = 9450;
 
@@ -43,13 +44,11 @@ app.set('port', process.env.PORT || PORT);
 
 app.get('/' ,function (req,res) {
     var clientIp = requestIp.getClientIp(req);
-    res.send('zvi\'s server\nWhere all good things start.' + "\nYour ip: +" + clientIp);
+    res.send('frillappss\' server\nWhere all good things start.' + "\nYour ip: +" + clientIp);
 });
 app.listen(app.get('port'),function(){
     console.log('server started on port itzik '+ app.get('port'));
 });
-
-var upload = multer({ dest: 'uploads/' })
 
 // File input field name is simply 'file'
 
