@@ -38,12 +38,33 @@ ITZIK!
 
 //start the node server
 app.set('port', process.env.PORT || PORT);
+
 app.get('/' ,function (req,res) {
     var clientIp = requestIp.getClientIp(req);
     res.send('zvi\'s server\nWhere all good things start.' + "\nYour ip: +" + clientIp);
 });
 app.listen(app.get('port'),function(){
     console.log('server started on port itzik '+ app.get('port'));
+});
+
+var upload = multer({ dest: '/tmp/'});
+
+// File input field name is simply 'file'
+app.post('/file_upload', upload.single('file'), function(req, res) {
+    var file = __dirname + '/' + req.file.filename;
+    fs.rename(req.file.path, file, function(err) {
+        if (err) {
+            console.log(err);
+            res.send(500);
+        } else {
+            res.json({
+                message: 'File uploaded successfully',
+                filename: req.file.filename
+            });
+            var stats =
+            console.log("file name: " + req.file.filename);
+        }
+    });
 });
 
 
