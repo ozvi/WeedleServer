@@ -56,19 +56,22 @@ function pushNewGame(gameNum){
         console.log(snapshot.val());
         //set the current game to fb db
         var gameObj = snapshot.val();
+        var minutesDelay = gameObj.minutesDelay;
         var gameRef = db.ref("games/game"+gameNum);
         gameRef.update({
-            "backgroundUrl": gameObj.child("backgroundUrl").val(),
-            "gameSize": gameObj.child("gameSize").val(),
-            "prizeImageUrl": gameObj.child("prizeImageUrl").val(),
-            "prizeName": gameObj.child("prizeName").val(),
-            "startTimeMillis": calcNextGameStartTimeMillis(gameObj.child("minuteDelay").val()),
-            "medianBarPercent": 0
+            "backgroundUrl": gameObj.backgroundUrl,
+            "gameSize": gameObj.gameSize,
+            "prizeImgUrl": gameObj.prizeImgUrl,
+            "prizeName": gameObj.prizeName,
+            "startTimeMillis": calcNextGameStartTimeMillis(minutesDelay)
         });
         //start timer for game start
-        startGameTimer(gameObj.child("minuteDelay").val(),gameRef);
+        startGameTimer(minutesDelay,gameRef);
     }, function (errorObject) {
         console.log("The read failed: " + errorObject.code);
+        //if failed, call it again after reset currentRunnigGame
+        currentRunningGame = 0;
+        pushNewGame(gameNum)
     });
 
 };
@@ -84,9 +87,12 @@ function startGameTimer (minutes, gameRef) {
 };
 
 function calcNextGameStartTimeMillis (minutes) {
+    console.log("minutes: " + minutes);
     var d = new Date();
     var currentMillis = d.getTime();
+    console.log("current millis: " + currentMillis);
     var timeMillis = currentMillis+(minutes*60*1000);
+    console.log("results millis: " + timeMillis);
     return timeMillis;
 
 };
