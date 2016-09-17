@@ -12,7 +12,7 @@ var fs = require('fs');
 const PORT = 9450;
 firebase.initializeApp({
     serviceAccount: "./Weedle-69d94723eed7.json",
-    databaseURL: "https://weedle-27e37.firebaseio.com ",
+    databaseURL: "https://weedle-27e37.firebaseio.com",
     databaseAuthVariableOverride: {
         uid: "server_worker_1"
     }
@@ -42,8 +42,10 @@ app.post('/file_upload', upload.single('png'), function (req, res, next) {
 
 
 
+
+
 var currentRunningGame = 0;
-pushNewGame(1);
+ pushNewGame(1);
 function pushNewGame(gameNum){
 
     currentRunningGame++;
@@ -54,7 +56,7 @@ function pushNewGame(gameNum){
         console.log(snapshot.val());
         //set the current game to fb db
         var gameObj = snapshot.val();
-        var gameRef = db.ref("gamePresets/game"+gameNum);
+        var gameRef = db.ref("games/game"+gameNum);
         gameRef.update({
             "backgroundUrl": gameObj.child("backgroundUrl").val(),
             "gameSize": gameObj.child("gameSize").val(),
