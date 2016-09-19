@@ -54,8 +54,8 @@ const STATUS_NEW_GAME_DELAY = 3;
 const STATUS_COMMERCIAL_BREAK = 4;
 
 
-var game1 = {uid:"", status:0};
-var game2 = {uid:"", status:0};
+var game1 = {uid:"", status:0, facebookTimerEndSeconds:90};
+var game2 = {uid:"", status:0, facebookTimerEndSeconds:90};
 
  var usersCallbackRef = db.ref("usersCallback");
  // Attach an asynchronous callback to read the data at our posts reference
@@ -74,26 +74,53 @@ usersCallbackRef.on("value", function(snapshot) {
          }
          if (childData.iWon) {
              //user really won, now needs to login facebook
+             removeUserCallback(uidKey,childData.iWon.key);
+             if(tempBlockedUser(uidKey, gameNum))
+                 return;
+
              updateGameStatus(gameNum, STATUS_PENDING_WINNER);
              newPendingWinner(gameNum);
              notifyWinnerHeWon(uidKey, gameNum);
-             removeUserCallback(uidKey);
+             startFacebookLoginTimer(gameNum,uidKey);
          } else if (childData.facebookUser) {
              updateGameStatus(gameNum, STATUS_NEW_GAME_DELAY);
              onWinnerFacebookLogin(uidKey, childData.facebookUser.val());
              updateUserWinnerDetails(uidKey, childData.facebookUser.val())
-             removeUserCallback(uidKey);
+             removeUserCallback(uidKey,childData.facebookUser.key);
+         } else if (childData.userAddress) {
+             //TODO SAVE WINNER ADDRESS
+             removeUserCallback(uidKey,childData.userAddress.key);
          }
      });
  }, function (errorObject) {
  console.log("userscallback read failed: " + errorObject.code);
  });
+function startFacebookLoginTimer(gameNum,uid) {
+    var gameRef = db.ref("games/game"+gameNum);
+    var gameObj = (getGameObj(gameNum));
+    setTimeout(function(){
+        if(gameObj.status === STATUS_PENDING_WINNER){
+            gameRef.update({
+                "gameRunning": true,
+                "pendingWinner": false
+            });
+        }
+        updateGameStatus(gameNum,STATUS_GAME_RUNNING);
+        addUserToTempBlackList(uid,gameNum);
+    }, calcFutureTimerMillis(gameObj.facebookTimerEndSeconds)*1000);
+}
+function addUserToTempBlackList(uid,gameNum) {
+    var gameObj = (getGameObj(gameNum));
+    //TODO ADD TO GAME OBJ THE UID AS A BLOCKED USER TO A BLOCKED USERS ARRAY
+    gameObj.blockedUsers
+
+}
 function isUserReallyWon(uid) {
     //TODO do when finish making gameScores
     return 1;
 }
-function removeUserCallback(uid) {
-    var userCallbackRed = db.ref("usersCallback/"+uid);
+function removeUserCallback(uid,folder) {
+    var userCallbackRed = db.ref("usersCallback/"+uid+"/"+folder);
     userCallbackRed.set(null);
 }
 function notifyWinnerHeWon(uid, gameNum) {
@@ -133,8 +160,14 @@ function updateGameStatus(gameNum, newGameStatus){
     }
 
 }
-
-
+function getGameObj(gameNum){
+    switch (gameNum){
+        case 1:
+            return game1;
+        case 2:
+            return game2;
+    }
+}
 
 function onWinnerFacebookLogin(uid, winnerObj){
     var gameNum = getWinnerGameNum(uid);
@@ -236,7 +269,7 @@ function pushNewGame(gameNum){
             "gameSize": gameObj.gameSize,
             "prizeImgUrl": gameObj.prizeImgUrl,
             "prizeName": gameObj.prizeName,
-            "startTimeMillis": calcNextGameStartTimeMillis(minutesDelay)
+            "startTimeMillis": calcFutureTimerMillis(minutesDelay*60*1000)
         });
         //start timer for game start
         startGameTimer(minutesDelay,gameRef);
@@ -254,7 +287,7 @@ function startGameTimer (minutes, gameRef) {
     setTimeout(function(){
         gameRef.update({
         "gameRunning": true,
-        "winnerWon": false,
+        "pendingWinner": false,
         "winner": null,
         "medianBarPercent": 0
     })}, minutes*60*1000);
@@ -264,10 +297,9 @@ function getCurrentMillies(){
     var d = new Date();
     return currentMillis = d.getTime();
 }
-function calcNextGameStartTimeMillis (minutes) {
-    console.log("minutes: " + minutes);
+function calcFutureTimerMillis (millis) {
     console.log("current millis: " + getCurrentMillies());
-    var timeMillis = getCurrentMillies()+(minutes*60*1000);
+    var timeMillis = getCurrentMillies()+(millis);
     console.log("results millis: " + timeMillis);
     return timeMillis;
 
