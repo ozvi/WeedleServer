@@ -88,7 +88,10 @@ usersCallbackRef.on("value", function(snapshot) {
  }, function (errorObject) {
  console.log("userscallback read failed: " + errorObject.code);
  });
-
+function isUserReallyWon(uid) {
+    //TODO do when finish making gameScores
+    return 1;
+}
 function removeUserCallback(uid) {
     var userCallbackRed = db.ref("usersCallback/"+uid);
     userCallbackRed.set(null);
