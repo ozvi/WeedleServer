@@ -55,7 +55,7 @@ const STATUS_COMMERCIAL_BREAK = 4;
 
 
 var game1 = {uid:"", status:0, facebookTimerEndSeconds:90};
-var game2 = {uid:"", status:0, facebookTimerEndSeconds:90};
+var game2 = {uid:"", status:0, facebookTimerEndSeconds:90,blackList:{uid:""}};
 
  var usersCallbackRef = db.ref("usersCallback");
  // Attach an asynchronous callback to read the data at our posts reference
@@ -75,9 +75,8 @@ usersCallbackRef.on("value", function(snapshot) {
          if (childData.iWon) {
              //user really won, now needs to login facebook
              removeUserCallback(uidKey,childData.iWon.key);
-             if(tempBlockedUser(uidKey, gameNum))
+             if(isTempBlockedUser(uidKey, gameNum))
                  return;
-
              updateGameStatus(gameNum, STATUS_PENDING_WINNER);
              newPendingWinner(gameNum);
              notifyWinnerHeWon(uidKey, gameNum);
@@ -95,6 +94,15 @@ usersCallbackRef.on("value", function(snapshot) {
  }, function (errorObject) {
  console.log("userscallback read failed: " + errorObject.code);
  });
+function isTempBlockedUser(uidKey, gameNum) {
+    var gameObj = getGameObj(gameNum);
+    for(var i = 0; i < gameObj.blackList.length; i++){
+        if(gameObj.blackList[i] === uidKey){
+            return true;
+        }
+    }
+    return false;
+}
 function startFacebookLoginTimer(gameNum,uid) {
     var gameRef = db.ref("games/game"+gameNum);
     var gameObj = (getGameObj(gameNum));
@@ -111,8 +119,8 @@ function startFacebookLoginTimer(gameNum,uid) {
 }
 function addUserToTempBlackList(uid,gameNum) {
     var gameObj = (getGameObj(gameNum));
-    //TODO ADD TO GAME OBJ THE UID AS A BLOCKED USER TO A BLOCKED USERS ARRAY
-    gameObj.blockedUsers
+    //TODO MAKE SURE THIS WORKS
+    gameObj.blackList.uid = uid;
 
 }
 function isUserReallyWon(uid) {
@@ -172,7 +180,8 @@ function getGameObj(gameNum){
 function onWinnerFacebookLogin(uid, winnerObj){
     var gameNum = getWinnerGameNum(uid);
     publishWinnerDetails(gameNum,winnerObj)
-    pushFacebookPost(winnerObj.facebookToken);
+    //TODO MAKE SURE FACEBOOK POST WORKS
+    //pushFacebookPost(winnerObj.facebookToken);
     pushNewGame(gameNum);
 }
 
@@ -256,6 +265,8 @@ function getWinnerGameNum(uid){
 
 function pushNewGame(gameNum){
     currentRunningGame++;
+    updateGameStatus(gameNum, STATUS_GAME_RUNNING);
+    clearGameBlackList(gameNum);
     var gamesPresetsRef = db.ref("gamePresets/game"+currentRunningGame);
     // Attach an asynchronous callback to read the data at our posts reference
     console.log("game"+currentRunningGame);
@@ -281,7 +292,11 @@ function pushNewGame(gameNum){
     });
 
 };
-
+function clearGameBlackList(gameNum) {
+    var gameObj = getGameObj(gameNum);
+    //TODO CLEAR THE GAMEOBJ BLACKLIST. NOT SURE OF CLEAR(); WORKS
+    gameObj.blackList = [];
+}
 function startGameTimer (minutes, gameRef) {
     console.log("timer start: " +minutes);
     setTimeout(function(){
