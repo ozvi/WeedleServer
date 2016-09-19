@@ -98,7 +98,7 @@ function removeUserCallback(uid) {
 }
 function notifyWinnerHeWon(uid, gameNum) {
     var userFolderRef = db.ref("users/"+uid+"/game"+gameNum);
-    userFolderRef.update(true);
+    userFolderRef.set(true);
 }
 
 
