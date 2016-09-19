@@ -63,31 +63,41 @@ usersCallbackRef.on("value", function(snapshot) {
      snapshot.forEach(function(childSnapshot) {
          var uidKey = childSnapshot.key;
          var childData = childSnapshot.val();
-            if(childData.iWon){
-                //check game num
-                //check cheater
-                //notify winner/continue game
-               var gameNum = isUserReallyWon(uidKey);
-                //if gameNum == 0 than he is a cheater
-                if(gameNum == 0){
-                    addToBlackList(uidKey);
-                    removeUserCallback(uidKey);
-                    return;
-                }else{
-                //user really won, now needs to login facebook
-                    updateGameStatus(gameNum,STATUS_PENDING_WINNER);
-                    startListenWinnerFacebook(uidKey,gameNum);
-                    newPendingWinner(gameNum);
-                    notifyWinnerHeWon(uidKey);
-
-                }
-            }
+         //check game num
+         //check cheater
+         //notify winner/continue game
+         var gameNum = isUserReallyWon(uidKey);
+         if (gameNum == 0) {
+             addToBlackList(uidKey);
+             removeUserCallback(uidKey);
+            return;
+         }
+         if (childData.iWon) {
+             //user really won, now needs to login facebook
+             updateGameStatus(gameNum, STATUS_PENDING_WINNER);
+             newPendingWinner(gameNum);
+             notifyWinnerHeWon(uidKey, gameNum);
+             removeUserCallback(uidKey);
+         } else if (childData.facebookUser) {
+             updateGameStatus(gameNum, STATUS_NEW_GAME_DELAY);
+             onWinnerFacebookLogin(uidKey, childData.facebookUser.val());
+             updateUserWinnerDetails(uidKey, childData.facebookUser.val())
+             removeUserCallback(uidKey);
+         }
      });
-
-
  }, function (errorObject) {
  console.log("userscallback read failed: " + errorObject.code);
  });
+
+function removeUserCallback(uid) {
+    var userCallbackRed = db.ref("usersCallback/"+uid);
+    userCallbackRed.set(null);
+}
+function notifyWinnerHeWon(uid, gameNum) {
+    var userFolderRef = db.ref("users/"+uid+"/game"+gameNum);
+    userFolderRef.update(true);
+}
+
 
 function addToBlackList(uid) {
     var blackListUidRef = db.ref("blackList/"+uid);
@@ -100,12 +110,11 @@ function addToBlackList(uid) {
     }, function (errorObject) {
         console.log("The read failed: " + errorObject.code);
     });
-
 }
 function newPendingWinner(gameNum) {
-    var gameRef = db.ref("game"+gameNum);
+    var gameRef = db.ref("games/game"+gameNum);
     gameRef.update({
-        "gameRunnig": false,
+        "gameRunning": false,
         "pendingWinner": true
     });
 }
@@ -122,22 +131,43 @@ function updateGameStatus(gameNum, newGameStatus){
 
 }
 
-function startListenWinnerFacebook(uidKey,gameNum){
-    var facebookTokenRef = db.ref("users/"+uidKey+"/facebookToken");
-// Attach an asynchronous callback to read the data at our posts reference
-    facebookTokenRef.on("value", function(snapshot) {
-        updateGameStatus(gameNum,STATUS_NEW_GAME_DELAY);
-        onWinnerFacebookLogin(uidKey,snapshot.val());
-    }, function (errorObject) {
-        console.log("The read failed: " + errorObject.code);
+
+
+function onWinnerFacebookLogin(uid, winnerObj){
+    var gameNum = getWinnerGameNum(uid);
+    publishWinnerDetails(gameNum,winnerObj)
+    pushFacebookPost(winnerObj.facebookToken);
+    pushNewGame(gameNum);
+}
+
+function publishWinnerDetails(gameNum, winnerObj) {
+    var gameRef = db.ref("games/game"+gameNum+"/winner");
+    gameRef.update({
+        "firstName": winnerObj.firstName,
+        "lastName":  winnerObj.lastName,
+        "email":  winnerObj.email,
+        "friendsCount":  winnerObj.friendsCount,
+        "profileImgUrl": winnerObj.profileImgUrl
+    });
+    var billboardRef = db.ref("billboard");
+    billboardRef.push().set({
+        "firstName": winnerObj.firstName ,
+        "lastName": winnerObj.lastName,
+        "profileImgUrl": winnerObj.profileImgUrl,
+        "timestamp": getCurrentMillies()
     });
 }
 
-
-
-function onWinnerFacebookLogin(uid, facebookToken){
-    pushFacebookPost(facebookToken);
-    pushNewGame(getWinnerGameNum(uid));
+function updateUserWinnerDetails(uid, winnerObj) {
+    var userFolderRef = db.ref("users/"+uid);
+    userFolderRef.update({
+        "firstName": winnerObj.firstName,
+        "lastName":  winnerObj.lastName,
+        "email":  winnerObj.email,
+        "friendsCount":  winnerObj.friendsCount,
+        "facebookToken":  winnerObj.facebookToken,
+        "profileImgUrl": winnerObj.profileImgUrl
+    });
 }
 
 
