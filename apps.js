@@ -126,7 +126,7 @@ function startFacebookLoginTimer(gameNum,uid) {
         }
         updateGameStatus(gameNum,STATUS_GAME_RUNNING);
         addUserToTempBlackList(uid,gameNum);
-    }, calcFutureTimerMillis(time));
+    },timer);
 }
 function addUserToTempBlackList(uid,gameNum) {
     console.log("adding "+uid+" to black list");
