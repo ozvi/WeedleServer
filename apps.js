@@ -167,7 +167,7 @@ function addToBlackList(uid) {
             count += snapshot.val();
         blackListUidRef.set({
             "threatPoints" :  count,
-            "lastUpdateMillis" :  getCurrentMillies()
+            "lastUpdateMillis" :  getCurrentMillis()
         });
     }, function (errorObject) {
         console.log("The read failed: " + errorObject.code);
@@ -227,7 +227,7 @@ function publishWinnerDetails(gameNum, winnerObj) {
         "firstName": winnerObj.firstName ,
         "lastName": winnerObj.lastName,
         "profileImgUrl": winnerObj.profileImgUrl,
-        "timestamp": getCurrentMillies()
+        "timestamp": getCurrentMillis()
     });
 }
 
@@ -328,13 +328,13 @@ function startGameTimer (minutes, gameRef) {
     })}, minutes*60*1000);
 };
 
-function getCurrentMillies(){
+function getCurrentMillis(){
     var d = new Date();
-    return currentMillis = d.getTime();
+    return d.getTime();
 }
 function calcFutureTimerMillis (millis) {
-    console.log("current millis: " + getCurrentMillies());
-    var timeMillis = getCurrentMillies()+(millis);
+    console.log("current millis: " + getCurrentMillis());
+    var timeMillis = getCurrentMillis()+(millis);
     console.log("results millis: " + timeMillis);
     return timeMillis;
 };
