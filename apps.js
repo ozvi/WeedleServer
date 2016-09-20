@@ -94,8 +94,8 @@ usersCallbackRef.on("value", function(snapshot) {
          } else if (childData.facebookUser) {
              console.log("user callback new facebook account");
              updateGameStatus(gameNum, STATUS_NEW_GAME_DELAY);
-             onWinnerFacebookLogin(uidKey, childData.facebookUser.val());
-             updateUserWinnerDetails(uidKey, childData.facebookUser.val())
+             onWinnerFacebookLogin(uidKey, childData.facebookUser);
+             updateUserWinnerDetails(uidKey, childData.facebookUser);
              removeUserCallback(uidKey,"facebookUser");
          } else if (childData.userAddress) {
              //TODO SAVE WINNER ADDRESS
