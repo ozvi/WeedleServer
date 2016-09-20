@@ -73,15 +73,21 @@ usersCallbackRef.on("value", function(snapshot) {
             return;
          }
          if (childData.iWon) {
+             console.log("user callback i won notice");
+
              //user really won, now needs to login facebook
              removeUserCallback(uidKey,childData.iWon.key);
-             if(isTempBlockedUser(uidKey, gameNum))
+             if(isTempBlockedUser(uidKey, gameNum)) {
+                 console.log("winner temp blocked: "+uidKey);
                  return;
+             }
+
              updateGameStatus(gameNum, STATUS_PENDING_WINNER);
              newPendingWinner(gameNum);
              notifyWinnerHeWon(uidKey, gameNum);
              startFacebookLoginTimer(gameNum,uidKey);
          } else if (childData.facebookUser) {
+             console.log("user callback new facebook account");
              updateGameStatus(gameNum, STATUS_NEW_GAME_DELAY);
              onWinnerFacebookLogin(uidKey, childData.facebookUser.val());
              updateUserWinnerDetails(uidKey, childData.facebookUser.val())
@@ -104,10 +110,12 @@ function isTempBlockedUser(uidKey, gameNum) {
     return false;
 }
 function startFacebookLoginTimer(gameNum,uid) {
+    console.log("starting facebook timer");
     var gameRef = db.ref("games/game"+gameNum);
     var gameObj = (getGameObj(gameNum));
     setTimeout(function(){
         if(gameObj.status === STATUS_PENDING_WINNER){
+            console.log("timer ended. winner lost. resuming game (game running true, pending winner false)");
             gameRef.update({
                 "gameRunning": true,
                 "pendingWinner": false
@@ -118,6 +126,7 @@ function startFacebookLoginTimer(gameNum,uid) {
     }, calcFutureTimerMillis(gameObj.facebookTimerEndSeconds)*1000);
 }
 function addUserToTempBlackList(uid,gameNum) {
+    console.log("adding "+uid+" to black list";
     var gameObj = (getGameObj(gameNum));
     //TODO MAKE SURE THIS WORKS
     gameObj.blackList.uid = uid;
@@ -128,16 +137,19 @@ function isUserReallyWon(uid) {
     return 1;
 }
 function removeUserCallback(uid,folder) {
+    console.log("removing user callback:callback/"+uid+"/"+folder);
     var userCallbackRed = db.ref("usersCallback/"+uid+"/"+folder);
     userCallbackRed.set(null);
 }
 function notifyWinnerHeWon(uid, gameNum) {
+    console.log("notify winner he won");
     var userFolderRef = db.ref("users/"+uid+"/game"+gameNum);
     userFolderRef.set(true);
 }
 
 
 function addToBlackList(uid) {
+    console.log("adding "+uid+ " to black list");
     var blackListUidRef = db.ref("blackList/"+uid);
 // Attach an asynchronous callback to read the data at our posts reference
     blackListUidRef.once("value", function(snapshot) {
@@ -150,6 +162,7 @@ function addToBlackList(uid) {
     });
 }
 function newPendingWinner(gameNum) {
+    console.log("notify new pending winner");
     var gameRef = db.ref("games/game"+gameNum);
     gameRef.update({
         "gameRunning": false,
@@ -158,6 +171,7 @@ function newPendingWinner(gameNum) {
 }
 
 function updateGameStatus(gameNum, newGameStatus){
+    console.log("updating game: "+gameNum+" with new status: "+newGameStatus);
     switch (gameNum){
         case 1:
             game1.status = newGameStatus;
@@ -178,6 +192,7 @@ function getGameObj(gameNum){
 }
 
 function onWinnerFacebookLogin(uid, winnerObj){
+    console.log("winner connected to facebook!");
     var gameNum = getWinnerGameNum(uid);
     publishWinnerDetails(gameNum,winnerObj)
     //TODO MAKE SURE FACEBOOK POST WORKS
@@ -186,6 +201,7 @@ function onWinnerFacebookLogin(uid, winnerObj){
 }
 
 function publishWinnerDetails(gameNum, winnerObj) {
+    console.log("publishing new winner details!");
     var gameRef = db.ref("games/game"+gameNum+"/winner");
     gameRef.update({
         "firstName": winnerObj.firstName,
@@ -204,6 +220,7 @@ function publishWinnerDetails(gameNum, winnerObj) {
 }
 
 function updateUserWinnerDetails(uid, winnerObj) {
+    console.log("updating winner details");
     var userFolderRef = db.ref("users/"+uid);
     userFolderRef.update({
         "firstName": winnerObj.firstName,
@@ -260,8 +277,6 @@ function getWinnerGameNum(uid){
 }
 
 
-
-pushNewGame(1);
 
 function pushNewGame(gameNum){
     currentRunningGame++;
