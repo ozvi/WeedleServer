@@ -67,6 +67,7 @@ usersCallbackRef.on("value", function(snapshot) {
          //check cheater
          //notify winner/continue game
          var gameNum = isUserReallyWon(uidKey);
+         var gameObj = getGameObj(gameNum);
          if (gameNum == 0) {
              addToBlackList(uidKey);
              removeUserCallback(uidKey);
@@ -74,7 +75,11 @@ usersCallbackRef.on("value", function(snapshot) {
          }
          if (childData.iWon) {
              console.log("user callback i won notice");
-
+            if(gameObj.status === STATUS_PENDING_WINNER){
+                console.log("adding qWinner: " + uidKey);
+                gameObj.qWinners.push(uidKey);
+                return;
+            }
              //user really won, now needs to login facebook
              removeUserCallback(uidKey,"iWon");
              if(isTempBlockedUser(uidKey, gameNum)) {
@@ -126,7 +131,7 @@ function startFacebookLoginTimer(gameNum,uid) {
         }
         updateGameStatus(gameNum,STATUS_GAME_RUNNING);
         addUserToTempBlackList(uid,gameNum);
-    },timer);
+    },time);
 }
 function addUserToTempBlackList(uid,gameNum) {
     console.log("adding "+uid+" to black list");
