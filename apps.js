@@ -261,7 +261,7 @@ function getWinnerGameNum(uid){
 
 
 
-
+pushNewGame(1);
 
 function pushNewGame(gameNum){
     currentRunningGame++;
