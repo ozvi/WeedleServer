@@ -54,7 +54,7 @@ const STATUS_NEW_GAME_DELAY = 3;
 const STATUS_COMMERCIAL_BREAK = 4;
 
 
-var game1 = {uid:"", status:0, facebookTimerEndSeconds:90};
+var game1 = {uid:"", status:0, facebookTimerEndSeconds:90,blackList:{uid:""}};
 var game2 = {uid:"", status:0, facebookTimerEndSeconds:90,blackList:{uid:""}};
 
  var usersCallbackRef = db.ref("usersCallback");
