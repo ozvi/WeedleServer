@@ -126,7 +126,7 @@ function startFacebookLoginTimer(gameNum,uid) {
     }, calcFutureTimerMillis(gameObj.facebookTimerEndSeconds)*1000);
 }
 function addUserToTempBlackList(uid,gameNum) {
-    console.log("adding "+uid+" to black list";
+    console.log("adding "+uid+" to black list");
     var gameObj = (getGameObj(gameNum));
     //TODO MAKE SURE THIS WORKS
     gameObj.blackList.uid = uid;
