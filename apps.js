@@ -76,7 +76,7 @@ usersCallbackRef.on("value", function(snapshot) {
              console.log("user callback i won notice");
 
              //user really won, now needs to login facebook
-             removeUserCallback(uidKey,childData.iWon.key);
+             removeUserCallback(uidKey,"iWon");
              if(isTempBlockedUser(uidKey, gameNum)) {
                  console.log("winner temp blocked: "+uidKey);
                  return;
@@ -91,10 +91,10 @@ usersCallbackRef.on("value", function(snapshot) {
              updateGameStatus(gameNum, STATUS_NEW_GAME_DELAY);
              onWinnerFacebookLogin(uidKey, childData.facebookUser.val());
              updateUserWinnerDetails(uidKey, childData.facebookUser.val())
-             removeUserCallback(uidKey,childData.facebookUser.key);
+             removeUserCallback(uidKey,"facebookUser");
          } else if (childData.userAddress) {
              //TODO SAVE WINNER ADDRESS
-             removeUserCallback(uidKey,childData.userAddress.key);
+             removeUserCallback(uidKey,"userAddress");
          }
      });
  }, function (errorObject) {
@@ -113,6 +113,9 @@ function startFacebookLoginTimer(gameNum,uid) {
     console.log("starting facebook timer");
     var gameRef = db.ref("games/game"+gameNum);
     var gameObj = (getGameObj(gameNum));
+    console.log(gameObj);
+    var time = gameObj.facebookTimerEndSeconds*1000;
+    console.log("facebook timer time seconds:" +time);
     setTimeout(function(){
         if(gameObj.status === STATUS_PENDING_WINNER){
             console.log("timer ended. winner lost. resuming game (game running true, pending winner false)");
@@ -123,7 +126,7 @@ function startFacebookLoginTimer(gameNum,uid) {
         }
         updateGameStatus(gameNum,STATUS_GAME_RUNNING);
         addUserToTempBlackList(uid,gameNum);
-    }, calcFutureTimerMillis(gameObj.facebookTimerEndSeconds)*1000);
+    }, calcFutureTimerMillis(time));
 }
 function addUserToTempBlackList(uid,gameNum) {
     console.log("adding "+uid+" to black list");
@@ -153,8 +156,11 @@ function addToBlackList(uid) {
     var blackListUidRef = db.ref("blackList/"+uid);
 // Attach an asynchronous callback to read the data at our posts reference
     blackListUidRef.once("value", function(snapshot) {
-        blackListUidRef.update({
-            "threatPoints" :  snapshot.threatPoints++,
+        var count = 1;
+        if(snapshot.val() != null)
+            count += snapshot.val();
+        blackListUidRef.set({
+            "threatPoints" :  count,
             "lastUpdateMillis" :  getCurrentMillies()
         });
     }, function (errorObject) {
@@ -332,7 +338,6 @@ function calcFutureTimerMillis (millis) {
     var timeMillis = getCurrentMillies()+(millis);
     console.log("results millis: " + timeMillis);
     return timeMillis;
-
 };
 
 
