@@ -54,8 +54,8 @@ const STATUS_NEW_GAME_DELAY = 3;
 const STATUS_COMMERCIAL_BREAK = 4;
 
 
-var game1 = {uid:"", status:0, facebookTimerEndSeconds:90,blackList:{uid:""}};
-var game2 = {uid:"", status:0, facebookTimerEndSeconds:90,blackList:{uid:""}};
+var game1 = {pendingWinner:"", status:0, facebookTimerEndSeconds:90,blackList:{uid:""}};
+var game2 = {pendingWinner:"", status:0, facebookTimerEndSeconds:90,blackList:{uid:""}};
 
  var usersCallbackRef = db.ref("usersCallback");
  // Attach an asynchronous callback to read the data at our posts reference
@@ -91,6 +91,7 @@ usersCallbackRef.on("value", function(snapshot) {
              newPendingWinner(gameNum);
              notifyWinnerHeWon(uidKey, gameNum);
              startFacebookLoginTimer(gameNum,uidKey);
+             gameObj.pendingWinner = uidKey;
          } else if (childData.facebookUser) {
              console.log("user callback new facebook account");
              updateGameStatus(gameNum, STATUS_NEW_GAME_DELAY);
@@ -269,23 +270,16 @@ function pushFacebookPost(facebookToken) {
 
 
 
-function getWinnerGameNum(uid){
-    var ref = db.ref("users/"+uid);
-// Attach an asynchronous callback to read the data at our posts reference
-    ref.once("value", function(snapshot) {
-        snapshot.forEach(function(childSnapshot) {
-            var key = childSnapshot.key;
-            var childData = childSnapshot.val();
-            if(key.startsWith("game")){
-                if(childData == true){
-                    return   key;
-                }
-            }
-        });
-    }, function (errorObject) {
-        console.log("The read failed: " + errorObject.code);
-    });
+function getWinnerGameNum(uid) {
+
+    var gameObj1 = getGameObj(1);
+    if (gameObj1.pendingWinner === uid)
+        return 1;
+    var gameObj2 = getGameObj(2);
+    if (gameObj2.pendingWinner === uid)
+        return 2;
 }
+
 
 
 
