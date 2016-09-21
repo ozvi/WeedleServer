@@ -205,13 +205,22 @@ function getGameObj(gameNum){
 
 function onWinnerFacebookLogin(uid, winnerObj){
     console.log("winner connected to facebook!");
+
     var gameNum = getWinnerGameNum(uid);
+    if(gameNum === 0) {
+        addToBlackList(uid);
+        return;
+    }
+    resetUserWonVal(uid,gameNum);
     publishWinnerDetails(gameNum,winnerObj)
     //TODO MAKE SURE FACEBOOK POST WORKS
     //pushFacebookPost(winnerObj.facebookToken);
     pushNewGame(gameNum);
 }
-
+function resetUserWonVal(uid, gameNum) {
+    var gameRef = db.ref("users/"+uid+"/game"+gameNum);
+    gameRef.update(null);
+}
 function publishWinnerDetails(gameNum, winnerObj) {
     console.log("publishing new winner details!");
     var gameRef = db.ref("games/game"+gameNum+"/winner");
@@ -278,6 +287,7 @@ function getWinnerGameNum(uid) {
     var gameObj2 = getGameObj(2);
     if (gameObj2.pendingWinner === uid)
         return 2;
+    return 0;
 }
 
 
