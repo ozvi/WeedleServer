@@ -121,7 +121,6 @@ function startFacebookLoginTimer(gameNum,uid) {
     var gameRef = db.ref("games/game"+gameNum);
     var gameObj = (getGameObj(gameNum));
     console.log(gameObj);
-    console.log("facebook timer time seconds:" +time);
     setTimeout(function(){
         if(gameObj.status === STATUS_PENDING_WINNER){
             console.log("timer ended. winner lost. resuming game (game running true, pending winner false)");
@@ -290,10 +289,15 @@ function pushNewGame(gameNum){
     clearGameBlackList(gameNum);
     var gamesPresetsRef = db.ref("gamePresets/game"+currentRunningGame);
     // Attach an asynchronous callback to read the data at our posts reference
-    console.log("game"+currentRunningGame);
+    console.log("currentRunningGame: "+currentRunningGame);
     gamesPresetsRef.once("value", function(snapshot) {
         //set the current game to fb db
         var gameObj = snapshot.val()
+        if(gameObj == null){
+            currentRunningGame = 0;
+            pushNewGame(gameNum)
+            return;
+        }
         var minutesDelay = gameObj.minutesDelay;
         var gameRef = db.ref("games/game"+gameNum);
         gameRef.update({
@@ -310,10 +314,12 @@ function pushNewGame(gameNum){
         //if failed, call it again after reset currentRunnigGame
         currentRunningGame = 0;
         pushNewGame(gameNum)
+        return;
     });
 
 };
 function clearGameBlackList(gameNum) {
+    console.log("game num: " +gameNum);
     var gameObj = getGameObj(gameNum);
     //TODO CLEAR THE GAMEOBJ BLACKLIST. NOT SURE OF CLEAR(); WORKS
     gameObj.blackList = {uid:""};
@@ -328,6 +334,7 @@ function startGameTimer (minutes, gameRef) {
         "medianBarPercent": 0
     })}, minutes*60*1000);
 };
+
 
 function getCurrentMillis(){
     var d = new Date();
