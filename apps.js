@@ -152,8 +152,8 @@ function removeUserCallback(uid,folder) {
 }
 function notifyWinnerHeWon(uid, gameNum) {
     console.log("notify winner he won");
-    var userFolderRef = db.ref("users/"+uid+"/game"+gameNum);
-    userFolderRef.set(true);
+    var userFolderRef = db.ref("games/game"+gameNum+"/pendingWinnerUid");
+    userFolderRef.set(uid);
 }
 
 
@@ -211,15 +211,10 @@ function onWinnerFacebookLogin(uid, winnerObj){
         addToBlackList(uid);
         return;
     }
-    resetUserWonVal(uid,gameNum);
     publishWinnerDetails(gameNum,winnerObj)
     //TODO MAKE SURE FACEBOOK POST WORKS
     //pushFacebookPost(winnerObj.facebookToken);
     pushNewGame(gameNum);
-}
-function resetUserWonVal(uid, gameNum) {
-    var gameRef = db.ref("users/"+uid+"/game"+gameNum);
-    gameRef.update(null);
 }
 function publishWinnerDetails(gameNum, winnerObj) {
     console.log("publishing new winner details!");
@@ -315,6 +310,7 @@ function pushNewGame(gameNum){
             "gameSize": gameObj.gameSize,
             "prizeImgUrl": gameObj.prizeImgUrl,
             "prizeName": gameObj.prizeName,
+            "pendingWinnerUid": null,
             "startTimeMillis": calcFutureTimerMillis(minutesDelay*60*1000)
         });
         //start timer for game start
