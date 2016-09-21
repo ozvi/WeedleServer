@@ -42,20 +42,21 @@ app.listen(app.get('port'),function(){
 // get winner social image file
 app.post('/file_upload', upload.single('png'), function (req, res, next) {
     console.log('image file received!');
+    //TODO NEED TO RENAME FILE BASED ON GAMENUM AND USER UID
 });
 
 
 
 
-
+const STATUS_NO_STATUS = 0;
 const STATUS_GAME_RUNNING = 1;
 const STATUS_PENDING_WINNER = 2;
 const STATUS_NEW_GAME_DELAY = 3;
 const STATUS_COMMERCIAL_BREAK = 4;
 
 
-var game1 = {pendingWinner:"", status:0, facebookTimerEndSeconds:90,blackList:{uid:""}};
-var game2 = {pendingWinner:"", status:0, facebookTimerEndSeconds:90,blackList:{uid:""}};
+var game1 = {pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:90,blackList:{uid:""}};
+var game2 = {pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:90,blackList:{uid:""}};
 
  var usersCallbackRef = db.ref("usersCallback");
  // Attach an asynchronous callback to read the data at our posts reference
@@ -70,7 +71,7 @@ usersCallbackRef.on("value", function(snapshot) {
          var gameObj = getGameObj(gameNum);
          if (gameNum == 0) {
              addToBlackList(uidKey);
-             removeUserCallback(uidKey);
+             removeUserCallback(uidKey,"");
             return;
          }
          if (childData.iWon) {
@@ -83,7 +84,7 @@ usersCallbackRef.on("value", function(snapshot) {
              //user really won, now needs to login facebook
              removeUserCallback(uidKey,"iWon");
              if(isTempBlockedUser(uidKey, gameNum)) {
-                 console.log("winner temp blocked: "+uidKey);
+                 console.log("winner is in a temp block: "+uidKey);
                  return;
              }
 
@@ -120,7 +121,6 @@ function startFacebookLoginTimer(gameNum,uid) {
     var gameRef = db.ref("games/game"+gameNum);
     var gameObj = (getGameObj(gameNum));
     console.log(gameObj);
-    var time = gameObj.facebookTimerEndSeconds*1000;
     console.log("facebook timer time seconds:" +time);
     setTimeout(function(){
         if(gameObj.status === STATUS_PENDING_WINNER){
@@ -130,9 +130,10 @@ function startFacebookLoginTimer(gameNum,uid) {
                 "pendingWinner": false
             });
         }
+        //TODO CHECK IF WE HAVE QWINNERS WAITING IN LINE BEFORE RESTARTING THE GAME
         updateGameStatus(gameNum,STATUS_GAME_RUNNING);
         addUserToTempBlackList(uid,gameNum);
-    },time);
+    },gameObj.facebookTimerEndSeconds*1000);
 }
 function addUserToTempBlackList(uid,gameNum) {
     console.log("adding "+uid+" to black list");
