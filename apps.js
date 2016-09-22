@@ -301,7 +301,7 @@ function getWinnerGameNum(uid) {
 
 function resetGameScores() {
     var gameScoresRef = db.ref("gameScores");
-    gameScoresRef.update(null);
+    gameScoresRef.set(null);
 }
 
 function pushNewGame(gameNum){
