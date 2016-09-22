@@ -93,6 +93,8 @@ usersCallbackRef.on("value", function(snapshot) {
              notifyWinnerHeWon(uidKey, gameNum);
              startFacebookLoginTimer(gameNum,uidKey);
              gameObj.pendingWinner = uidKey;
+             console.log("new pending winner for game "+gameNum);
+             console.log("game obj "+gameObj);
          } else if (childData.facebookUser) {
              console.log("user callback new facebook account");
              updateGameStatus(gameNum, STATUS_NEW_GAME_DELAY);
@@ -207,6 +209,7 @@ function onWinnerFacebookLogin(uid, winnerObj){
     console.log("winner connected to facebook!");
 
     var gameNum = getWinnerGameNum(uid);
+    console.log("winner game num: "+ gameNum);
     if(gameNum === 0) {
         addToBlackList(uid);
         return;
