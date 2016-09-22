@@ -300,6 +300,7 @@ function getWinnerGameNum(uid) {
 
 
 function resetGameScores() {
+    console.log("resting game scores")
     var gameScoresRef = db.ref("gameScores");
     gameScoresRef.set(null);
 }
