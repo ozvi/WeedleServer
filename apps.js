@@ -329,6 +329,7 @@ function pushNewGame(gameNum){
             "prizeImgUrl": gameObj.prizeImgUrl,
             "prizeName": gameObj.prizeName,
             "pendingWinnerUid": null,
+            "newGameStarted": false,
             "startTimeMillis": calcFutureTimerMillis(minutesDelay*60*1000)
         });
         //start timer for game start
@@ -354,6 +355,7 @@ function startGameTimer (minutes, gameRef) {
         gameRef.update({
         "gameRunning": true,
         "pendingWinner": null,
+        "newGameStarted": true,
         "winner": null,
         "medianBarPercent": 0
     })}, minutes*60*1000);
