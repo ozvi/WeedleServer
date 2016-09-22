@@ -340,7 +340,7 @@ function startGameTimer (minutes, gameRef) {
     setTimeout(function(){
         gameRef.update({
         "gameRunning": true,
-        "pendingWinner": false,
+        "pendingWinner": null,
         "winner": null,
         "medianBarPercent": 0
     })}, minutes*60*1000);
