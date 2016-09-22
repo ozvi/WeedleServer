@@ -55,8 +55,8 @@ const STATUS_NEW_GAME_DELAY = 3;
 const STATUS_COMMERCIAL_BREAK = 4;
 
 
-var game1 = {pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:90,blackList:{uid:""}};
-var game2 = {pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:90,blackList:{uid:""}};
+var game1 = {pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:90,blackList[],qWinners[]};
+var game2 = {pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:90,blackList[],qWinners[]};
 
  var usersCallbackRef = db.ref("usersCallback");
  // Attach an asynchronous callback to read the data at our posts reference
@@ -138,10 +138,10 @@ function startFacebookLoginTimer(gameNum,uid) {
     },gameObj.facebookTimerEndSeconds*1000);
 }
 function addUserToTempBlackList(uid,gameNum) {
-    console.log("adding "+uid+" to black list");
+    console.log("adding "+uid+" to temp black list");
     var gameObj = (getGameObj(gameNum));
     //TODO MAKE SURE THIS WORKS
-    gameObj.blackList.uid = uid;
+    gameObj.blackList.push(uid);
 
 }
 function isUserReallyWon(uid) {
