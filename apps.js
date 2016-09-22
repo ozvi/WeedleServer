@@ -54,8 +54,8 @@ const STATUS_PENDING_WINNER = 2;
 const STATUS_NEW_GAME_DELAY = 3;
 const STATUS_COMMERCIAL_BREAK = 4;
 
-var game1 = {pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:90,blackList:[],qWinners:[]};
-var game2 = {pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:90,blackList:[],qWinners:[]};
+var game1 = {pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:20,blackList:[],qWinners:[]};
+var game2 = {pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:20,blackList:[],qWinners:[]};
 
  var usersCallbackRef = db.ref("usersCallback");
  // Attach an asynchronous callback to read the data at our posts reference
