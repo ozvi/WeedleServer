@@ -77,7 +77,7 @@ usersCallbackRef.on("value", function(snapshot) {
              console.log("user callback i won notice");
             if(gameObj.status === STATUS_PENDING_WINNER){
                 console.log("adding qWinner: " + uidKey);
-                gameObj.qWinners.push(uidKey);
+                addToArray(gameObj.qWinners,uidKey);
                 return;
             }
              //user really won, now needs to login facebook
@@ -140,8 +140,13 @@ function addUserToTempBlackList(uid,gameNum) {
     console.log("adding "+uid+" to temp black list");
     var gameObj = (getGameObj(gameNum));
     //TODO MAKE SURE THIS WORKS
-    gameObj.blackList.push(uid);
+    addToArray(gameObj.blackList,uid);
+}
 
+function addToArray(array, val){
+    array[array.length] = val;
+    console.log("array print:");
+    console.log(array);
 }
 function isUserReallyWon(uid) {
     //TODO do when finish making gameScores
