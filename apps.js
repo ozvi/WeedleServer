@@ -299,9 +299,13 @@ function getWinnerGameNum(uid) {
 }
 
 
-
+function resetGameScores() {
+    var gameScoresRef = db.ref("gameScores);
+    gameScoresRef.update(null);
+}
 
 function pushNewGame(gameNum){
+    resetGameScores();
     currentRunningGame++;
     updateGameStatus(gameNum, STATUS_GAME_RUNNING);
     clearGameBlackList(gameNum);
