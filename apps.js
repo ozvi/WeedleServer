@@ -337,7 +337,7 @@ function clearGameBlackList(gameNum) {
     console.log("game num: " +gameNum);
     var gameObj = getGameObj(gameNum);
     //TODO CLEAR THE GAMEOBJ BLACKLIST. NOT SURE OF CLEAR(); WORKS
-    gameObj.blackList = {uid:""};
+    gameObj.blackList = [];
 }
 function startGameTimer (minutes, gameRef) {
     console.log("timer start: " +minutes);
