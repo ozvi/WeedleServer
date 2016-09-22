@@ -159,8 +159,12 @@ function removeUserCallback(uid,folder) {
 }
 function notifyWinnerHeWon(uid, gameNum) {
     console.log("notify winner he won");
-    var userFolderRef = db.ref("games/game"+gameNum+"/pendingWinnerUid");
-    userFolderRef.set(uid);
+    var gameObj = getGameObj(gameNum);
+    var userFolderRef = db.ref("games/game" + gameNum + "/pendingWinnerInfo");
+    userFolderRef.set({
+        pendingWinnerUid:uid,
+        facebookTimerMillis:calcFutureTimerMillis(gameObj.facebookTimerEndSeconds)
+    });
 }
 
 
