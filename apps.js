@@ -128,6 +128,7 @@ function startFacebookLoginTimer(gameNum,uid) {
             console.log("timer ended. winner lost. resuming game (game running true, pending winner false)");
             gameRef.update({
                 "gameRunning": true,
+                "pendingWinnerInfo": null,
                 "pendingWinner": false
             });
             //TODO CHECK IF WE HAVE QWINNERS WAITING IN LINE BEFORE RESTARTING THE GAME
@@ -328,6 +329,7 @@ function pushNewGame(gameNum){
             "gameSize": gameObj.gameSize,
             "prizeImgUrl": gameObj.prizeImgUrl,
             "prizeName": gameObj.prizeName,
+            "pendingWinnerInfo": null,
             "pendingWinnerUid": null,
             "newGameStarted": false,
             "startTimeMillis": calcFutureTimerMillis(minutesDelay*60*1000)
