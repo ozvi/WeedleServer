@@ -130,10 +130,10 @@ function startFacebookLoginTimer(gameNum,uid) {
                 "gameRunning": true,
                 "pendingWinner": false
             });
+            //TODO CHECK IF WE HAVE QWINNERS WAITING IN LINE BEFORE RESTARTING THE GAME
+            updateGameStatus(gameNum,STATUS_GAME_RUNNING);
+            addUserToTempBlackList(uid,gameNum);
         }
-        //TODO CHECK IF WE HAVE QWINNERS WAITING IN LINE BEFORE RESTARTING THE GAME
-        updateGameStatus(gameNum,STATUS_GAME_RUNNING);
-        addUserToTempBlackList(uid,gameNum);
     },gameObj.facebookTimerEndSeconds*1000);
 }
 function addUserToTempBlackList(uid,gameNum) {
