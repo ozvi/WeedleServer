@@ -69,8 +69,6 @@ usersCallbackRef.on("value", function(snapshot) {
          //notify winner/continue game
          var gameNum = isUserReallyWon(uidKey);
          var gameObj = getGameObj(gameNum);
-         console.log("game obj:");
-         console.log(gameObj);
          if (gameNum == 0) {
              addToBlackList(uidKey);
              removeUserCallback(uidKey,"");
@@ -95,6 +93,8 @@ usersCallbackRef.on("value", function(snapshot) {
              notifyWinnerHeWon(uidKey, gameNum);
              startFacebookLoginTimer(gameNum,uidKey);
              gameObj.pendingWinner = uidKey;
+             console.log("game obj for game "+gameNum);
+             console.log(gameObj);
              console.log("new pending winner for game "+gameNum);
          } else if (childData.facebookUser) {
              console.log("user callback new facebook account");
@@ -283,11 +283,9 @@ function pushFacebookPost(facebookToken) {
 
 function getWinnerGameNum(uid) {
 
-    var gameObj1 = getGameObj(1);
-    if (gameObj1.pendingWinner === uid)
+    if (game1.pendingWinner == uid)
         return 1;
-    var gameObj2 = getGameObj(2);
-    if (gameObj2.pendingWinner === uid)
+    if (game2.pendingWinner == uid)
         return 2;
     return 0;
 }
