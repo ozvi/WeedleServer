@@ -54,8 +54,9 @@ const STATUS_PENDING_WINNER = 2;
 const STATUS_NEW_GAME_DELAY = 3;
 const STATUS_COMMERCIAL_BREAK = 4;
 
-var game1 = {pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[]};
-var game2 = {pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[]};
+var gamePreset = {pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[]};
+var game1 = gamePreset;
+var game2 = gamePreset;
 
  var usersCallbackRef = db.ref("usersCallback");
  // Attach an asynchronous callback to read the data at our posts reference
@@ -227,7 +228,7 @@ function onWinnerFacebookLogin(uid, winnerObj){
         addToBlackList(uid);
         return;
     }
-    publishWinnerDetails(gameNum,winnerObj)
+    publishWinnerDetails(gameNum,winnerObj);
     //TODO MAKE SURE FACEBOOK POST WORKS
     //pushFacebookPost(winnerObj.facebookToken);
     pushNewGame(gameNum);
@@ -301,21 +302,31 @@ function getWinnerGameNum(uid) {
 
 
 function resetGameScores() {
+    //TODO RESET BY GAME NUM
     console.log("resting game scores")
     var gameScoresRef = db.ref("gameScores");
     gameScoresRef.set(null);
 }
+function resetGame(gameNum){
+    if(gameNum == 1){
+        game1 = gamePreset;
+    }else if(gameNum == 2){
+        game2 = gamePreset;
+    }
+}
+
+
 
 function pushNewGame(gameNum){
     resetGameScores();
+
     currentRunningGame++;
     updateGameStatus(gameNum, STATUS_GAME_RUNNING);
-    clearGameBlackList(gameNum);
+    resetGame(gameNum);
     var gamesPresetsRef = db.ref("gamePresets/game"+currentRunningGame);
     // Attach an asynchronous callback to read the data at our posts reference
     console.log("currentRunningGame: "+currentRunningGame);
     gamesPresetsRef.once("value", function(snapshot) {
-        //set the current game to fb db
         var gameObj = snapshot.val()
         if(gameObj == null){
             currentRunningGame = 0;
@@ -345,12 +356,7 @@ function pushNewGame(gameNum){
     });
 
 };
-function clearGameBlackList(gameNum) {
-    console.log("game num: " +gameNum);
-    var gameObj = getGameObj(gameNum);
-    //TODO CLEAR THE GAMEOBJ BLACKLIST. NOT SURE OF CLEAR(); WORKS
-    gameObj.blackList = [];
-}
+
 function startGameTimer (minutes, gameRef) {
     console.log("timer start: " +minutes);
     setTimeout(function(){
@@ -383,6 +389,18 @@ function calcFutureTimerMillis (millis) {
 
 
 
+ var adminControlRef = db.ref("adminControl");
+ // Attach an asynchronous callback to read the data at our posts reference
+adminControlRef.on("value", function(snapshot) {
+    if(snapshot.game1Reset == true){
+        pushNewGame(1);
+    }else if(snapshot.game2Reset == true){
+        pushNewGame(2);
+    }
+
+ }, function (errorObject) {
+ console.log("The read failed: " + errorObject.code);
+ });
 
 
 /*
