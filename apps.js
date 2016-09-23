@@ -334,7 +334,7 @@ function pushNewGame(gameNum){
             pushNewGame(gameNum)
             return;
         }
-        var minutesDelay = gameObj.minutesDelay;
+
         var gameRef = db.ref("games/game"+gameNum);
         gameRef.update({
             "backgroundUrl": gameObj.backgroundUrl,
@@ -344,7 +344,7 @@ function pushNewGame(gameNum){
             "pendingWinnerInfo": null,
             "pendingWinnerUid": null,
             "newGameStarted": false,
-            "startTimeMillis": calcFutureTimerMillis(minutesDelay*60*1000),
+            "startTimeMillis": calcFutureTimerMillis(gameObj.secsDelay*1000),
             "resetGameScores": true
 
         });
