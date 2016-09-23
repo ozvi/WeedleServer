@@ -318,6 +318,7 @@ function resetGame(gameNum){
 
 
 function pushNewGame(gameNum){
+
     resetGameScores();
 
     currentRunningGame++;
@@ -343,7 +344,9 @@ function pushNewGame(gameNum){
             "pendingWinnerInfo": null,
             "pendingWinnerUid": null,
             "newGameStarted": false,
-            "startTimeMillis": calcFutureTimerMillis(minutesDelay*60*1000)
+            "startTimeMillis": calcFutureTimerMillis(minutesDelay*60*1000),
+            "resetGameScores": true
+
         });
         //start timer for game start
         startGameTimer(minutesDelay,gameRef);
@@ -365,8 +368,10 @@ function startGameTimer (minutes, gameRef) {
         "pendingWinner": null,
         "newGameStarted": true,
         "winner": null,
-        "medianBarPercent": 0
-    })}, minutes*60*1000);
+        "medianBarPercent": 0,
+        "resetGameScores": false
+
+        })}, minutes*60*1000);
 };
 
 
