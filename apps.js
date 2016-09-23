@@ -394,14 +394,15 @@ function calcFutureTimerMillis (millis) {
 adminControlRef.on("value", function(snapshot) {
     if(snapshot.val().game1Reset == true){
         pushNewGame(1);
+        adminControlRef.set({
+            "game1Reset" : false});
     }else if(snapshot.val().game2Reset == true){
-        pushNewGame(2);
-    }
+            pushNewGame(2);
+            adminControlRef.set({
+                "game2Reset" : false
+            });
+    };
 
-    adminControlRef.set({
-        "game1Reset" : false,
-        "game2Reset" : false
-    });
 
  }, function (errorObject) {
  console.log("The read failed: " + errorObject.code);
