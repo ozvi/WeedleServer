@@ -398,6 +398,11 @@ adminControlRef.on("value", function(snapshot) {
         pushNewGame(2);
     }
 
+    adminControlRef.set({
+        "game1Reset" : false,
+        "game2Reset" : false
+    });
+
  }, function (errorObject) {
  console.log("The read failed: " + errorObject.code);
  });
