@@ -54,7 +54,7 @@ const STATUS_PENDING_WINNER = 2;
 const STATUS_NEW_GAME_DELAY = 3;
 const STATUS_COMMERCIAL_BREAK = 4;
 
-var gamePreset = {pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[]};
+var gamePreset = {pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[],prizeImgUrl:""};
 var game1 = gamePreset;
 var game2 = gamePreset;
 
@@ -234,6 +234,8 @@ function onWinnerFacebookLogin(uid, winnerObj){
     pushNewGame(gameNum);
 }
 function publishWinnerDetails(gameNum, winnerObj) {
+    var gameObj = getGameObj(gameNum);
+
     console.log("publishing new winner details!");
     var gameRef = db.ref("games/game"+gameNum+"/winner");
     gameRef.update({
@@ -248,6 +250,7 @@ function publishWinnerDetails(gameNum, winnerObj) {
         "firstName": winnerObj.firstName ,
         "lastName": winnerObj.lastName,
         "profileImgUrl": winnerObj.profileImgUrl,
+        "prizeImgUrl": gameObj.prizeImgUrl,
         "timestamp": getCurrentMillis()
     });
 }
@@ -346,8 +349,8 @@ function pushNewGame(gameNum){
             "newGameStarted": false,
             "startTimeMillis": calcFutureTimerMillis(gameObj.secsDelay*1000),
             "resetGameScores": true
-
         });
+        setLocalGamePrize(gameNum, gameObj.prizeImgUrl);
         //start timer for game start
         startGameTimer(gameObj.secsDelay,gameRef);
     }, function (errorObject) {
@@ -359,7 +362,12 @@ function pushNewGame(gameNum){
     });
 
 };
-
+function setLocalGamePrize(gameNum, prizeImgUrl) {
+    if(gameNum == 1)
+        game1.prizeImgUrl = prizeImgUrl;
+   else  if(gameNum == 2)
+        game2.prizeImgUrl = prizeImgUrl;
+}
 function startGameTimer (seconds, gameRef) {
     console.log("timer start: " +seconds);
     setTimeout(function(){
@@ -398,21 +406,35 @@ function calcFutureTimerMillis (millis) {
  // Attach an asynchronous callback to read the data at our posts reference
 adminControlRef.on("value", function(snapshot) {
     if(snapshot.val().game1Reset == true){
-        pushNewGame(1);
-        adminControlRef.set({
-            "game1Reset" : false});
+        adminGameReset(1);
     }else if(snapshot.val().game2Reset == true){
-            pushNewGame(2);
-            adminControlRef.set({
-                "game2Reset" : false
-            });
+        adminGameReset(2);
     };
 
 
  }, function (errorObject) {
  console.log("The read failed: " + errorObject.code);
  });
-
+var firstWinner = true;
+function adminGameReset(gameNum) {
+    pushNewGame(gameNum);
+    var adminGameResetRef = db.ref("adminControl/game"+gameNum+"Reset");
+    var billboardRef = db.ref("billboard").orderByChild('timestamp').startAt(Date.now());
+    billboardRef.once("value", function(snapshot) {
+        snapshot.forEach(function(childSnapshot) {
+            if(firstWinner){
+                var winnerObj = {firstName:childSnapshot.firstName,lastName:childSnapshot.lastName,profileImgUrl:childSnapshot.profileImgUrl};
+                firstWinner = false;
+                publishWinnerDetails(gameNum,winnerObj)
+                ;
+            }
+        });
+        firstWinner = true;
+    }, function (errorObject) {
+        console.log("The read failed: " + errorObject.code);
+    });
+    adminGameResetRef.set(false);
+}
 
 /*
 //retreive data from db + listen to changes to ref
