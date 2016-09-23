@@ -349,7 +349,7 @@ function pushNewGame(gameNum){
 
         });
         //start timer for game start
-        startGameTimer(minutesDelay,gameRef);
+        startGameTimer(gameObj.secsDelay,gameRef);
     }, function (errorObject) {
         console.log("The read failed: " + errorObject.code);
         //if failed, call it again after reset currentRunnigGame
@@ -360,8 +360,8 @@ function pushNewGame(gameNum){
 
 };
 
-function startGameTimer (minutes, gameRef) {
-    console.log("timer start: " +minutes);
+function startGameTimer (seconds, gameRef) {
+    console.log("timer start: " +seconds);
     setTimeout(function(){
         gameRef.update({
         "gameRunning": true,
@@ -371,7 +371,7 @@ function startGameTimer (minutes, gameRef) {
         "medianBarPercent": 0,
         "resetGameScores": false
 
-        })}, minutes*60*1000);
+        })}, seconds*1000);
 };
 
 
