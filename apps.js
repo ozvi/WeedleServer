@@ -165,7 +165,7 @@ function notifyWinnerHeWon(uid, gameNum) {
     var userFolderRef = db.ref("games/game" + gameNum + "/pendingWinnerInfo");
     userFolderRef.set({
         pendingWinnerUid:uid,
-        facebookTimerMillis:calcFutureTimerMillis(gameObj.facebookTimerEndSeconds)
+        facebookTimerMillis:calcFutureTimerMillis(gameObj.facebookTimerEndSeconds*1000)
     });
 }
 
