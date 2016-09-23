@@ -392,9 +392,9 @@ function calcFutureTimerMillis (millis) {
  var adminControlRef = db.ref("adminControl");
  // Attach an asynchronous callback to read the data at our posts reference
 adminControlRef.on("value", function(snapshot) {
-    if(snapshot.game1Reset == true){
+    if(snapshot.val().game1Reset == true){
         pushNewGame(1);
-    }else if(snapshot.game2Reset == true){
+    }else if(snapshot.val().game2Reset == true){
         pushNewGame(2);
     }
 
