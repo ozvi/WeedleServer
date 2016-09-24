@@ -421,6 +421,7 @@ function adminGameReset(gameNum) {
     var adminGameResetRef = db.ref("adminControl/game"+gameNum+"Reset");
     var billboardRef = db.ref("billboard").orderByChild('timestamp').startAt(Date.now());
     billboardRef.once("value", function(snapshot) {
+        console.log("foreach billboard started ");
         snapshot.forEach(function(childSnapshot) {
             if(firstWinner){
                 var winnerObj = {firstName:childSnapshot.firstName,lastName:childSnapshot.lastName,profileImgUrl:childSnapshot.profileImgUrl};
@@ -428,8 +429,8 @@ function adminGameReset(gameNum) {
                 publishWinnerDetails(gameNum,winnerObj)
                 ;
             }
+            firstWinner = true;
         });
-        firstWinner = true;
     }, function (errorObject) {
         console.log("The read failed: " + errorObject.code);
     });
