@@ -236,15 +236,7 @@ function onWinnerFacebookLogin(uid, winnerObj){
 function publishWinnerDetails(gameNum, winnerObj) {
     var gameObj = getGameObj(gameNum);
 
-    console.log("publishing new winner details!");
-    var gameRef = db.ref("games/game"+gameNum+"/winner");
-    gameRef.update({
-        "firstName": winnerObj.firstName,
-        "lastName":  winnerObj.lastName,
-        "email":  winnerObj.email,
-        "friendsCount":  winnerObj.friendsCount,
-        "profileImgUrl": winnerObj.profileImgUrl
-    });
+    publishWinnerDetailsToGame(gameNum, winnerObj);
     var billboardRef = db.ref("billboard");
     billboardRef.push().set({
         "firstName": winnerObj.firstName ,
@@ -254,6 +246,17 @@ function publishWinnerDetails(gameNum, winnerObj) {
         "timestamp": getCurrentMillis()
     });
 }
+function publishWinnerDetailsToGame(gameNum, winnerObj) {
+
+    console.log("publishing new winner details!");
+    var gameRef = db.ref("games/game"+gameNum+"/winner");
+    gameRef.update({
+        "firstName": winnerObj.firstName,
+        "lastName":  winnerObj.lastName,
+        "profileImgUrl": winnerObj.profileImgUrl
+    });
+}
+
 
 function updateUserWinnerDetails(uid, winnerObj) {
     console.log("updating winner details");
@@ -415,28 +418,37 @@ adminControlRef.on("value", function(snapshot) {
  }, function (errorObject) {
  console.log("The read failed: " + errorObject.code);
  });
-var firstWinner = true;
+
 function adminGameReset(gameNum) {
     pushNewGame(gameNum);
     var adminGameResetRef = db.ref("adminControl/game"+gameNum+"Reset");
-    var billboardRef = db.ref("billboard").orderByChild('timestamp').startAt(Date.now());
+    var firstWinner = true;
+    var billboardRef = db.ref("billboard").limitToFirst(1);//orderByChild('timestamp').startAt(Date.now());
     billboardRef.once("value", function(snapshot) {
         console.log("foreach billboard started ");
+        try {
         snapshot.forEach(function(childSnapshot) {
-            if(firstWinner){
+            var serverWinnerObj = childSnapshot.val();
+            console.log("firstWinnerState: " +firstWinner);
+            if(firstWinner === true){
                 console.log("found first winner");
-                var winnerObj = {firstName:childSnapshot.firstName,lastName:childSnapshot.lastName,profileImgUrl:childSnapshot.profileImgUrl};
+                var winnerObj = {firstName:serverWinnerObj.firstName,lastName:serverWinnerObj.lastName,profileImgUrl:serverWinnerObj.profileImgUrl};
                 console.log(winnerObj);
+                publishWinnerDetailsToGame(gameNum,winnerObj);
                 firstWinner = false;
-                publishWinnerDetails(gameNum,winnerObj)
-                ;
+
+            }else {
+                    throw "myException"; // generates an exception
+                }
             }
-            firstWinner = true;
-        });
+        );
+        } catch (e) {
+        }
     }, function (errorObject) {
         console.log("The read failed: " + errorObject.code);
     });
     adminGameResetRef.set(false);
+    firstWinner = true;
 }
 
 /*
