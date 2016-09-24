@@ -324,9 +324,7 @@ function resetGame(gameNum){
 
 
 function pushNewGame(gameNum){
-
     resetGameScores();
-
     currentRunningGame++;
     updateGameStatus(gameNum, STATUS_GAME_RUNNING);
     resetGame(gameNum);
@@ -382,7 +380,9 @@ function startGameTimer (seconds, gameRef) {
         "medianBarPercent": 0,
         "resetGameScores": false
 
-        })}, seconds*1000);
+        })
+        resetGameScores();
+    }, seconds*1000);
 };
 
 
