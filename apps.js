@@ -33,7 +33,7 @@ app.set('port', process.env.PORT || PORT);
 
 app.get('/' ,function (req,res) {
     var clientIp = requestIp.getClientIp(req);
-    res.send('frillappss\' server\nWhere all good things start.' + "\nYour ip: +" + clientIp);
+    res.send('You shouldn\'t be here buddy. We\'ll hold on to your IP just in case ' + clientIp);
 });
 app.listen(app.get('port'),function(){
     console.log('server started on port itzik '+ app.get('port'));
@@ -90,7 +90,7 @@ usersCallbackRef.on("value", function(snapshot) {
 
              updateGameStatus(gameNum, STATUS_PENDING_WINNER);
              newPendingWinner(gameNum);
-             notifyWinnerHeWon(uidKey, gameNum);
+             calcAndNotifyWinnerHeWon(uidKey, gameNum);
              startFacebookLoginTimer(gameNum,uidKey);
              gameObj.pendingWinner = uidKey;
              console.log("game obj for game "+gameNum);
@@ -159,13 +159,29 @@ function removeUserCallback(uid,folder) {
     var userCallbackRed = db.ref("usersCallback/"+uid+"/"+folder);
     userCallbackRed.set(null);
 }
-function notifyWinnerHeWon(uid, gameNum) {
+
+function calcAndNotifyWinnerHeWon(uid, gameNum) {
+    var timeStampRef = db.ref("timeStamp");
+    timeStampRef.set(firebase.database.ServerValue.TIMESTAMP,function(error) {
+        if (error) {
+            console.log('Synchronization failed');
+        } else {
+            timeStampRef.once("value", function(snapshot) {
+                console.log('server timestamp: '+snapshot.val());
+                notifyWinnerHeWon(uid, gameNum,snapshot.val());
+            }, function (errorObject) {
+                console.log("The read failed: " + errorObject.code);
+            });
+        }
+    });
+}
+function notifyWinnerHeWon(uid, gameNum, serverTimeStamp) {
     console.log("notify winner he won");
     var gameObj = getGameObj(gameNum);
     var userFolderRef = db.ref("games/game" + gameNum + "/pendingWinnerInfo");
     userFolderRef.set({
         pendingWinnerUid:uid,
-        facebookTimerMillis:calcFutureTimerMillis(gameObj.facebookTimerEndSeconds*1000)
+        facebookTimerMillis:serverTimeStamp+gameObj.facebookTimerEndSeconds*1000
     });
 }
 
@@ -231,8 +247,9 @@ function onWinnerFacebookLogin(uid, winnerObj){
     publishWinnerDetails(gameNum,winnerObj);
     //TODO MAKE SURE FACEBOOK POST WORKS
     //pushFacebookPost(winnerObj.facebookToken);
-    pushNewGame(gameNum);
+   calcAndPushNewGame(gameNum)
 }
+
 function publishWinnerDetails(gameNum, winnerObj) {
     var gameObj = getGameObj(gameNum);
 
@@ -321,9 +338,24 @@ function resetGame(gameNum){
     }
 }
 
+function calcAndPushNewGame (gameNum) {
+    var timeStampRef = db.ref("timeStamp");
+    timeStampRef.set(firebase.database.ServerValue.TIMESTAMP,function(error) {
+        if (error) {
+            console.log('Synchronization failed');
+        } else {
+            timeStampRef.once("value", function(snapshot) {
+                console.log('server timestamp: '+snapshot.val());
+                pushNewGame(gameNum,snapshot.val());
+            }, function (errorObject) {
+                console.log("The read failed: " + errorObject.code);
+            });
+        }
+    });
+}
 
-
-function pushNewGame(gameNum){
+function pushNewGame(gameNum, gameStartTime){
+    console.log("game start time millis: "+gameStartTime);
     resetGameScores();
     currentRunningGame++;
     updateGameStatus(gameNum, STATUS_GAME_RUNNING);
@@ -335,20 +367,21 @@ function pushNewGame(gameNum){
         var gameObj = snapshot.val()
         if(gameObj == null){
             currentRunningGame = 0;
-            pushNewGame(gameNum)
+            pushNewGame(gameNum,gameStartTime);
             return;
         }
 
         var gameRef = db.ref("games/game"+gameNum);
         gameRef.update({
             "backgroundUrl": gameObj.backgroundUrl,
+            "gameRunning": false,
             "gameSize": gameObj.gameSize,
             "prizeImgUrl": gameObj.prizeImgUrl,
             "prizeName": gameObj.prizeName,
             "pendingWinnerInfo": null,
             "pendingWinnerUid": null,
             "newGameStarted": false,
-            "startTimeMillis": calcFutureTimerMillis(gameObj.secsDelay*1000),
+            "startTimeMillis": gameStartTime+gameObj.secsDelay*1000,
             "resetGameScores": true
         });
         setLocalGamePrize(gameNum, gameObj.prizeImgUrl);
@@ -358,7 +391,7 @@ function pushNewGame(gameNum){
         console.log("The read failed: " + errorObject.code);
         //if failed, call it again after reset currentRunnigGame
         currentRunningGame = 0;
-        pushNewGame(gameNum)
+        pushNewGame(gameNum,gameStartTime);
         return;
     });
 
@@ -420,7 +453,7 @@ adminControlRef.on("value", function(snapshot) {
  });
 
 function adminGameReset(gameNum) {
-    pushNewGame(gameNum);
+    calcAndPushNewGame(gameNum);
     var adminGameResetRef = db.ref("adminControl/game"+gameNum+"Reset");
     var firstWinner = true;
     var billboardRef = db.ref("billboard").limitToFirst(1);//orderByChild('timestamp').startAt(Date.now());
