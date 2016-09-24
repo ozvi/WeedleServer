@@ -424,7 +424,9 @@ function adminGameReset(gameNum) {
         console.log("foreach billboard started ");
         snapshot.forEach(function(childSnapshot) {
             if(firstWinner){
+                console.log("found first winner");
                 var winnerObj = {firstName:childSnapshot.firstName,lastName:childSnapshot.lastName,profileImgUrl:childSnapshot.profileImgUrl};
+                console.log(winnerObj);
                 firstWinner = false;
                 publishWinnerDetails(gameNum,winnerObj)
                 ;
