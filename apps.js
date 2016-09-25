@@ -64,17 +64,14 @@ usersCallbackRef.on("value", function(snapshot) {
      snapshot.forEach(function(childSnapshot) {
          var uidKey = childSnapshot.key;
          var childData = childSnapshot.val();
-         //check game num
-         //check cheater
-         //notify winner/continue game
-         var gameNum = isUserReallyWon(uidKey);
-         var gameObj = getGameObj(gameNum);
-         if (gameNum == 0) {
-             addToBlackList(uidKey);
-             removeUserCallback(uidKey,"");
-            return;
-         }
          if (childData.iWon) {
+             var gameNum = isUserReallyWon(uidKey);
+             var gameObj = getGameObj(gameNum);
+             if (gameNum == 0) {
+                 addToBlackList(uidKey);
+                 removeUserCallback(uidKey,"");
+                 return;
+             }
              console.log("user callback i won notice");
             if(gameObj.status === STATUS_PENDING_WINNER){
                 console.log("adding qWinner: " + uidKey);
@@ -93,12 +90,9 @@ usersCallbackRef.on("value", function(snapshot) {
              calcAndNotifyWinnerHeWon(uidKey, gameNum);
              startFacebookLoginTimer(gameNum,uidKey);
              gameObj.pendingWinner = uidKey;
-             console.log("game obj for game "+gameNum);
-             console.log(gameObj);
              console.log("new pending winner for game "+gameNum);
          } else if (childData.facebookUser) {
              console.log("user callback new facebook account");
-             updateGameStatus(gameNum, STATUS_NEW_GAME_DELAY);
              onWinnerFacebookLogin(uidKey, childData.facebookUser);
              updateUserWinnerDetails(uidKey, childData.facebookUser);
              removeUserCallback(uidKey,"facebookUser");
@@ -152,13 +146,24 @@ function addToArray(array, val){
 }
 function isUserReallyWon(uid) {
     //TODO do when finish making gameScores
+    //TODO FOR NOW ALWAYS RETURNING 1, NEED TO RETURN 0 WHEN NOTHING FOUND
     return 1;
+    /*console.log("making sure user really won "+uid);
+    if(game1.pendingWinner == uid){
+        return 1;
+    } else if(game2.pendingWinner == uid){
+        return 2;
+    }*/
+    // console.log("User didn\'t really win - "+uid);
+    // return 0;
+
 }
 function removeUserCallback(uid,folder) {
     console.log("removing user callback:callback/"+uid+"/"+folder);
     var userCallbackRed = db.ref("usersCallback/"+uid+"/"+folder);
     userCallbackRed.set(null);
 }
+
 
 function calcAndNotifyWinnerHeWon(uid, gameNum) {
     var timeStampRef = db.ref("timeStamp");
@@ -175,6 +180,7 @@ function calcAndNotifyWinnerHeWon(uid, gameNum) {
         }
     });
 }
+
 function notifyWinnerHeWon(uid, gameNum, serverTimeStamp) {
     console.log("notify winner he won");
     var gameObj = getGameObj(gameNum);
@@ -237,8 +243,8 @@ function getGameObj(gameNum){
 
 function onWinnerFacebookLogin(uid, winnerObj){
     console.log("winner connected to facebook!");
-
     var gameNum = getWinnerGameNum(uid);
+    updateGameStatus(gameNum, STATUS_NEW_GAME_DELAY);
     console.log("winner game num: "+ gameNum);
     if(gameNum === 0) {
         addToBlackList(uid);
