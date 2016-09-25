@@ -10,7 +10,6 @@ var multer  = require('multer');
 var upload = multer({ dest: 'uploads/' });
 var fs = require('fs');
 const PORT = 9450;
-var currentRunningGame = 0;
 var facebookRequire = require('fb');
 
 facebookRequire.options({version: 'v2.4'});
@@ -54,7 +53,7 @@ const STATUS_PENDING_WINNER = 2;
 const STATUS_NEW_GAME_DELAY = 3;
 const STATUS_COMMERCIAL_BREAK = 4;
 
-var gamePreset = {pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[],prizeImgUrl:""};
+var gamePreset = {pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[],prizeImgUrl:"",currentGamePreset:0};
 var game1 = gamePreset;
 var game2 = gamePreset;
 
@@ -359,20 +358,37 @@ function calcAndPushNewGame (gameNum) {
         }
     });
 }
-
+function incrementCurrentGamePreset(gameNum) {
+    if(gameNum == 1){
+        game1.currentGamePreset = game1.currentGamePreset+1;
+    }else if(gameNum == 2){
+        game2.currentGamePreset = game2.currentGamePreset+1;
+    }
+}
+function resetCurrentGamePreset(gameNum) {
+    if(gameNum == 1){
+        game1.currentGamePreset = 0;
+    }else if(gameNum == 2){
+        game2.currentGamePreset = 0;
+    }
+}
 function pushNewGame(gameNum, gameStartTime){
     console.log("game start time millis: "+gameStartTime);
+    if(newGameTimeout != null){
+        clearTimeout(newGameTimeout);
+    }
     resetGameScores();
-    currentRunningGame++;
+    incrementCurrentGamePreset(gameNum);
     updateGameStatus(gameNum, STATUS_GAME_RUNNING);
     resetGame(gameNum);
-    var gamesPresetsRef = db.ref("gamePresets/game"+currentRunningGame);
+    var localGameObj = getGameObj(gameNum);
+    var gamesPresetsRef = db.ref("gamePresets/game"+gameNum+"/"+localGameObj.currentGamePreset);
     // Attach an asynchronous callback to read the data at our posts reference
-    console.log("currentRunningGame: "+currentRunningGame);
+    console.log("currentRunningGame: "+localGameObj.currentGamePreset);
     gamesPresetsRef.once("value", function(snapshot) {
         var gameObj = snapshot.val()
         if(gameObj == null){
-            currentRunningGame = 0;
+            resetCurrentGamePreset(gameNum);
             pushNewGame(gameNum,gameStartTime);
             return;
         }
@@ -395,10 +411,6 @@ function pushNewGame(gameNum, gameStartTime){
         startGameTimer(gameObj.secsDelay,gameRef);
     }, function (errorObject) {
         console.log("The read failed: " + errorObject.code);
-        //if failed, call it again after reset currentRunnigGame
-        currentRunningGame = 0;
-        pushNewGame(gameNum,gameStartTime);
-        return;
     });
 
 };
@@ -408,9 +420,10 @@ function setLocalGamePrize(gameNum, prizeImgUrl) {
    else  if(gameNum == 2)
         game2.prizeImgUrl = prizeImgUrl;
 }
+var newGameTimeout;
 function startGameTimer (seconds, gameRef) {
     console.log("timer start: " +seconds);
-    setTimeout(function(){
+    newGameTimeout = setTimeout(function(){
         gameRef.update({
         "gameRunning": true,
         "pendingWinner": null,
