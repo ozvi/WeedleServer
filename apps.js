@@ -512,9 +512,9 @@ function adminGameReset(gameNum) {
 
 var firebaseQueueRef = db.ref('queue');
 var options = {
-    'numWorkers': 1,
+    'numWorkers': 10
 };
-var gameScoresQueue = new Queue(firebaseQueueRef, function(data, progress, resolve, reject) {
+var gameScoresQueue = new Queue(firebaseQueueRef,options, function(data, progress, resolve, reject) {
     // Read and process task data
     console.log("queue_:");
     console.log(data);
