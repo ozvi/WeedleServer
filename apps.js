@@ -6,6 +6,7 @@ var express = require('express');
 var app = express();
 var requestIp = require('request-ip');
 var firebase = require('firebase');
+var Queue = require('firebase-queue');
 var multer  = require('multer');
 var upload = multer({ dest: 'uploads/' });
 var fs = require('fs');
@@ -414,6 +415,9 @@ function pushNewGame(gameNum, gameStartTime){
     });
 
 };
+
+
+
 function setLocalGamePrize(gameNum, prizeImgUrl) {
     if(gameNum == 1)
         game1.prizeImgUrl = prizeImgUrl;
@@ -503,6 +507,27 @@ function adminGameReset(gameNum) {
     firstWinner = true;
 }
 
+
+//queue workers
+
+var firebaseQueueRef = db.ref('queue');
+var options = {
+    'numWorkers': 10,
+};
+var gameScoresQueue = new Queue(firebaseQueueRef, function(data, progress, resolve, reject) {
+    // Read and process task data
+    console.log("queue_:");
+    console.log(data);
+
+    setTimeout(function() {
+        resolve();
+    }, 0);
+});
+
+
+
+
+
 /*
 //retreive data from db + listen to changes to ref
 var ref = db.ref("itzik/pantsColor");
@@ -559,3 +584,5 @@ var uid = "asdasdasd32q321effff3";
 var customToken = firebase.auth().createCustomToken(uid);
 console.log(custom
     /**/
+
+
