@@ -11,6 +11,7 @@ var multer  = require('multer');
 var upload = multer({ dest: 'uploads/' });
 var fs = require('fs');
 const PORT = 9450;
+const MAX_CLICK_SPEED_MILLIS = 70;
 var facebookRequire = require('fb');
 
 facebookRequire.options({version: 'v2.4'});
@@ -512,19 +513,53 @@ function adminGameReset(gameNum) {
 
 var firebaseQueueRef = db.ref('queue');
 var options = {
-    'numWorkers': 100
+    'numWorkers': 1
 };
-var gameScoresQueue = new Queue(firebaseQueueRef,options, function(data, progress, resolve, reject) {
+var gameScoresQueue = new Queue(firebaseQueueRef,options, function(gameScoreTask, progress, resolve, reject) {
     // Read and process task data
-    console.log("queue_:");
-    console.log(data);
-
+    console.log("queue:");
+    console.log(gameScoreTask);
+    verifyGameScore(gameScoreTask);
     setTimeout(function() {
         resolve();
     }, 0);
 });
 
+function verifyGameScore(gameScoreTask) {
+    var gameScoresRef = db.ref("gameScores/"+gameScoreTask.uid+"/game"+gameScoreTask.gameNum);
+    var currentTimeMillis = getCurrentMillis();
+    gameScoresRef.once("value", function(snapshot) {
+        try {
+            var gameScoreObj = snapshot.val();
+            var scoreGap = gameScoreTask.score - gameScoreObj.score;
+            if(scoreGap == 0)return;
+                var timeGap = currentTimeMillis - gameScoreObj.lastUpdateMillis;
+                var speed = timeGap/scoreGap;
+            console.log("scoreGap: " + scoreGap);
+            console.log("timeGap: " + timeGap);
+            console.log("speed: " + speed);
 
+            if(speed < MAX_CLICK_SPEED_MILLIS){
+                addToBlackList(gameScoreTask.uid);
+            }else{
+                updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis);
+
+            }
+        }
+        catch(err) {
+            updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis);
+        }
+    }, function (errorObject) {
+        console.log("The read failed: " + errorObject.code);
+    });
+}
+function updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis) {
+        console.log("New game score: " + gameScoreTask.score);
+    gameScoresRef.set({
+        "score":gameScoreTask.score,
+        "lastUpdateMillis":currentTimeMillis
+    });
+}
 
 
 
