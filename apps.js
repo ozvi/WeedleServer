@@ -73,6 +73,7 @@ usersCallbackRef.on("value", function(snapshot) {
                  removeUserCallback(uidKey,"");
                  return;
              }
+             addPendingWinner asdas asd a
              console.log("user callback i won notice");
             if(gameObj.status === STATUS_PENDING_WINNER){
                 console.log("adding qWinner: " + uidKey);
@@ -85,12 +86,11 @@ usersCallbackRef.on("value", function(snapshot) {
                  console.log("winner is in a temp block: "+uidKey);
                  return;
              }
-
+             gameObj.pendingWinner = uidKey;
              updateGameStatus(gameNum, STATUS_PENDING_WINNER);
              newPendingWinner(gameNum);
              calcAndNotifyWinnerHeWon(uidKey, gameNum);
              startFacebookLoginTimer(gameNum,uidKey);
-             gameObj.pendingWinner = uidKey;
              console.log("new pending winner for game "+gameNum);
          } else if (childData.facebookUser) {
              console.log("user callback new facebook account");
@@ -561,7 +561,7 @@ function isUserBlackListed(uid) {
             if(serverUid == uid)
                 return 0;
         });
-        isUserReallyWon(uid);
+        return isUserReallyWon(uid);
     }, function (errorObject) {
         console.log("The read failed: " + errorObject.code);
     });
