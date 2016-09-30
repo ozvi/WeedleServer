@@ -11,7 +11,7 @@ var multer  = require('multer');
 var upload = multer({ dest: 'uploads/' });
 var fs = require('fs');
 const PORT = 9450;
-const MAX_CLICK_SPEED_MILLIS = 70;
+const MAX_CLICK_SPEED_MILLIS = 55;
 var facebookRequire = require('fb');
 
 facebookRequire.options({version: 'v2.4'});
@@ -55,7 +55,7 @@ const STATUS_PENDING_WINNER = 2;
 const STATUS_NEW_GAME_DELAY = 3;
 const STATUS_COMMERCIAL_BREAK = 4;
 
-var gamePreset = {pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[],prizeImgUrl:"",currentGamePreset:0};
+var gamePreset = {pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[],prizeImgUrl:"",currentGamePreset:0,gameSize:0};
 var game1 = gamePreset;
 var game2 = gamePreset;
 
@@ -66,7 +66,7 @@ usersCallbackRef.on("value", function(snapshot) {
          var uidKey = childSnapshot.key;
          var childData = childSnapshot.val();
          if (childData.iWon) {
-             var gameNum = isUserReallyWon(uidKey);
+             var gameNum = isUserBlackListed(uidKey);
              var gameObj = getGameObj(gameNum);
              if (gameNum == 0) {
                  addToBlackList(uidKey);
@@ -145,20 +145,7 @@ function addToArray(array, val){
     console.log("array print:");
     console.log(array);
 }
-function isUserReallyWon(uid) {
-    //TODO do when finish making gameScores
-    //TODO FOR NOW ALWAYS RETURNING 1, NEED TO RETURN 0 WHEN NOTHING FOUND
-    return 1;
-    /*console.log("making sure user really won "+uid);
-    if(game1.pendingWinner == uid){
-        return 1;
-    } else if(game2.pendingWinner == uid){
-        return 2;
-    }*/
-    // console.log("User didn\'t really win - "+uid);
-    // return 0;
 
-}
 function removeUserCallback(uid,folder) {
     console.log("removing user callback:callback/"+uid+"/"+folder);
     var userCallbackRed = db.ref("usersCallback/"+uid+"/"+folder);
@@ -200,7 +187,7 @@ function addToBlackList(uid) {
     blackListUidRef.once("value", function(snapshot) {
         var count = 1;
         if(snapshot.val() != null)
-            count += snapshot.val();
+            count += snapshot.val().threatPoints;
         blackListUidRef.set({
             "threatPoints" :  count,
             "lastUpdateMillis" :  getCurrentMillis()
@@ -408,7 +395,7 @@ function pushNewGame(gameNum, gameStartTime){
             "startTimeMillis": gameStartTime+gameObj.secsDelay*1000,
             "resetGameScores": true
         });
-        setLocalGamePrize(gameNum, gameObj.prizeImgUrl);
+        setLocalGameData(gameNum, gameObj);
         //start timer for game start
         startGameTimer(gameObj.secsDelay,gameRef);
     }, function (errorObject) {
@@ -419,11 +406,14 @@ function pushNewGame(gameNum, gameStartTime){
 
 
 
-function setLocalGamePrize(gameNum, prizeImgUrl) {
-    if(gameNum == 1)
-        game1.prizeImgUrl = prizeImgUrl;
-   else  if(gameNum == 2)
-        game2.prizeImgUrl = prizeImgUrl;
+function setLocalGameData(gameNum, gameObj) {
+    if(gameNum == 1){
+        game1.prizeImgUrl = gameObj.prizeImgUrl;
+        game1.gameSize = gameObj.gameSize;
+    }else  if(gameNum == 2){
+        game2.prizeImgUrl = gameObj.prizeImgUrl;
+        game1.gameSize = gameObj.gameSize;
+    }
 }
 var newGameTimeout;
 function startGameTimer (seconds, gameRef) {
@@ -562,6 +552,99 @@ function updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis) {
 }
 
 
+function isUserBlackListed(uid) {
+    var blackListRef = db.ref("blackList");
+// Attach an asynchronous callback to read the data at our posts reference
+    blackListRef.once("value", function(snapshot) {
+        snapshot.forEach(function(childSnapshot) {
+            var serverUid = childSnapshot.key;
+            if(serverUid == uid)
+                return 0;
+        });
+        isUserReallyWon(uid);
+    }, function (errorObject) {
+        console.log("The read failed: " + errorObject.code);
+    });
+
+}
+
+
+function checkReallyWon(gameNum, gameScoreObj, uid) {
+    var scoreGap = gameScoreObj.score - getGameObj(1).gameSize;
+    if(scoreGap == 0){
+        return gameNum;
+    }else{
+        var timeGap = getCurrentMillis() - gameScoreObj.lastUpdateMillis;
+        var speed = timeGap/scoreGap;
+        if(speed < MAX_CLICK_SPEED_MILLIS){
+            return gameNum;
+        }else{
+            addToBlackList(uid)
+            return 0;
+        }
+    }
+}
+function isUserReallyWon(uid) {
+
+    var userGameScoresRef = db.ref("gameScores/"+uid);
+    userGameScoresRef.once("value", function(snapshot) {
+        try {
+            snapshot.forEach(function(childSnapshot) {
+                var gameObjKey = childSnapshot.key;
+                var gameObj = childSnapshot.val();
+                var gameNum = 0;
+                if (gameObj.game1) {
+                    gameNum = checkReallyWon(1,gameObj.game1,uid);
+                    if(gameNum != 0)return gameNum;
+                }else if (gameObj.game2) {
+                    gameNum = checkReallyWon(2,gameObj.game2,uid);
+                    if(gameNum != 0)return gameNum;
+                }
+                return gameNum;
+            });
+
+
+
+
+
+
+
+
+            var gameScoreObj = snapshot.val();
+            var scoreGap = gameScoreTask.score - gameScoreObj.score;
+            if(scoreGap == 0)return;
+            var timeGap = currentTimeMillis - gameScoreObj.lastUpdateMillis;
+            var speed = timeGap/scoreGap;
+            console.log("scoreGap: " + scoreGap);
+            console.log("timeGap: " + timeGap);
+            console.log("speed: " + speed);
+
+            if(speed < MAX_CLICK_SPEED_MILLIS){
+                addToBlackList(gameScoreTask.uid);
+            }else{
+                updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis);
+
+            }
+        }
+        catch(err) {
+            updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis);
+        }
+    }, function (errorObject) {
+        console.log("The read failed: " + errorObject.code);
+    });
+
+    //TODO FOR NOW ALWAYS RETURNING 1, NEED TO RETURN 0 WHEN NOTHING FOUND
+    return 1;
+    /*console.log("making sure user really won "+uid);
+     if(game1.pendingWinner == uid){
+     return 1;
+     } else if(game2.pendingWinner == uid){
+     return 2;
+     }*/
+    // console.log("User didn\'t really win - "+uid);
+    // return 0;
+
+}
 
 /*
 //retreive data from db + listen to changes to ref
