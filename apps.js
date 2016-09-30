@@ -111,7 +111,7 @@ function iWon(uid) {
                 console.log(gameObj);
                 if (gameObj.game1 != null) {
                     gameNum = checkReallyWon(1,gameObj.game1,uid);
-                }else if (gameObj.game1 != null) {
+                }else if (gameObj.game2 != null) {
                     gameNum = checkReallyWon(2,gameObj.game2,uid);
                 }
             });
