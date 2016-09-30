@@ -19,7 +19,7 @@ var facebookRequire = require('fb');
 facebookRequire.options({version: 'v2.4'});
 var options = facebookRequire.extend({appId: '1152404564834495', appSecret: '6fe1247db8011460545bd9dc39f81d63'});
 var facebook = new facebookRequire.Facebook(options);
-postToFacebookPage(FACEBOOK_TOKEN,"hi3","/uploads/test_image.png");
+postToFacebookPage(FACEBOOK_TOKEN,"hi4","/uploads/test_image.png");
 
 function postToFacebookPage(access_token, message, imgPath) {
 
@@ -28,7 +28,7 @@ function postToFacebookPage(access_token, message, imgPath) {
             url: 'https://graph.facebook.com/weedleApp/feed?access_token=' + access_token,
             formData: {
                 message: message
-               // source: __dirname+imgPath
+                source: __dirname+imgPath
             }
         }, function(err, res, body) {
             var bodyJSON = JSON.parse(body);
