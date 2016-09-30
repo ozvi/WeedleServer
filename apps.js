@@ -27,12 +27,13 @@ function postToFacebookPage(access_token, message, imgPath) {
         {
             url: 'https://graph.facebook.com/weedleApp/feed?access_token=' + access_token,
             formData: {
-                message: message,
-                source: __dirname+imgPath
+                message: message
+               // source: __dirname+imgPath
             }
         }, function(err, res, body) {
             var bodyJSON = JSON.parse(body);
             if(bodyJSON.error) {
+                console.log(bodyJSON.error.message);
                 console.log(bodyJSON.error.message);
             }
         }
