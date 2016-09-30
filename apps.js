@@ -22,7 +22,7 @@ var facebook = new facebookRequire.Facebook(options);
 postToFacebookPage(FACEBOOK_TOKEN,"hi4","/uploads/test_image.png");
 
 function postToFacebookPage(access_token, message, imgPath) {
-
+    console.log(__dirname+imgPath);
    request.post(
         {
             url: 'https://graph.facebook.com/weedleApp/feed?access_token=' + access_token,
