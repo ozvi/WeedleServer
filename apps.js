@@ -41,7 +41,7 @@ function postToFacebookPage(access_token, message, imgPath) {
     );
 
     app.get('/game1/winnerImage', function (req, res) {
-        res.sendFile("uploads/test_image.png");
+        res.sendFile("./uploads/test_image.png");
     });
 
     /*// Specify the URL and query string parameters needed for the request
