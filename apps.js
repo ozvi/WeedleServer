@@ -109,10 +109,9 @@ function iWon(uid) {
                 var gameObjKey = childSnapshot.key;
                 var gameObj = childSnapshot.val();
                 console.log(gameObj);
-
-                if (gameObj.game1) {
+                if (gameObj.game1 != null) {
                     gameNum = checkReallyWon(1,gameObj.game1,uid);
-                }else if (gameObj.game2) {
+                }else if (gameObj.game1 != null) {
                     gameNum = checkReallyWon(2,gameObj.game2,uid);
                 }
             });
