@@ -117,8 +117,8 @@ function iWon(uid) {
             console.log("game num: " + gameNum);
             var gameObj = getGameObj(gameNum);
             if (gameNum == 0) {
-                addToBlackList(uidKey);
-                removeUserCallback(uidKey,"");
+                addToBlackList(uid);
+                removeUserCallback(uid,"iWon");
                 return;
             }
             console.log("user callback i won notice");
