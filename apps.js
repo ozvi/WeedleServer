@@ -86,7 +86,6 @@ usersCallbackRef.on("value", function(snapshot) {
 
 
 function iWon(uid) {
-
     var blackListRef = db.ref("blackList");
     var gameNum = 0;
 // Attach an asynchronous callback to read the data at our posts reference
@@ -601,12 +600,17 @@ function updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis) {
 
 
 function checkReallyWon(gameNum, gameScoreObj, uid) {
+    console.log("game"+ gameNum+" score object:");
+    console.log(gameScoreObj);
     var scoreGap = gameScoreObj.score - getGameObj(1).gameSize;
+    console.log("Score gap: " + scoreGap);
     if(scoreGap == 0){
         return gameNum;
     }else{
         var timeGap = getCurrentMillis() - gameScoreObj.lastUpdateMillis;
+        console.log("Time gap: " + timeGap);
         var speed = timeGap/scoreGap;
+        console.log("Speed: " + speed);
         if(speed < MAX_CLICK_SPEED_MILLIS && scoreGap < MIN_ALLOWED_WINNER_SCORE_GAP){
             return gameNum;
         }else{
