@@ -507,9 +507,11 @@ function setLocalGameData(gameNum, gameObj) {
     if(gameNum == 1){
         game1.prizeImgUrl = gameObj.prizeImgUrl;
         game1.gameSize = gameObj.gameSize;
+        game1.facebookTimerEndSeconds = gameObj.facebookTimerEndSeconds;
     }else  if(gameNum == 2){
         game2.prizeImgUrl = gameObj.prizeImgUrl;
-        game1.gameSize = gameObj.gameSize;
+        game2.gameSize = gameObj.gameSize;
+        game2.facebookTimerEndSeconds = gameObj.facebookTimerEndSeconds;
     }
 }
 var newGameTimeout;
