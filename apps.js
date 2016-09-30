@@ -73,7 +73,6 @@ usersCallbackRef.on("value", function(snapshot) {
                  removeUserCallback(uidKey,"");
                  return;
              }
-             addPendingWinner asdas asd a
              console.log("user callback i won notice");
             if(gameObj.status === STATUS_PENDING_WINNER){
                 console.log("adding qWinner: " + uidKey);
