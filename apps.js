@@ -7,29 +7,28 @@ var app = express();
 var requestIp = require('request-ip');
 var firebase = require('firebase');
 var Queue = require('firebase-queue');
-//var request = require('request');
+var request = require('request');
 var multer  = require('multer');
 var upload = multer({ dest: 'uploads/' });
 var fs = require('fs');
 const PORT = 9450;
 const MAX_CLICK_SPEED_MILLIS = 55;
-const FACEBOOK_TOKEN = "EAACEdEose0cBAHjpmCYWyFPXFWjG9t0Db32Ws6ZBtkLaCxjyoGiu8wdV4qQgsIZCB6xbUtDUmDU3C3G9DItsPAiTFZC7011ht3KfqhVQ35Q31Sc6PrgE39jf2JjPl1HQEIFTfrrBT75PJMf8nmGaXkzSLgWYEjpQGD11DPwkgZDZD";
+const FACEBOOK_TOKEN = "EAAQYGxi5eL8BAOFJJZBMzZBL1YmMtXaS7OieQt4QuMrh8jKSU6ar9QqUuhwbZAemKg5KuP2UmVWxfk2zjnsnP5rBsHfLpu0DBc9XFlnI5xVXRs8FfYneNw370B7maAwDZAw9cHyRIkvahPmhlFmiHgsDqZB8w8hyqG02eDSjznAZDZD";
 const MIN_ALLOWED_WINNER_SCORE_GAP = 1000;
 var facebookRequire = require('fb');
 facebookRequire.options({version: 'v2.4'});
 var options = facebookRequire.extend({appId: '1152404564834495', appSecret: '6fe1247db8011460545bd9dc39f81d63'});
 var facebook = new facebookRequire.Facebook(options);
+postToFacebookPage(FACEBOOK_TOKEN,"hi3","uploads/test_image.png");
 
-//postToFacebookPage(FACEBOOK_TOKEN,"hi");
+function postToFacebookPage(access_token, message, imgPath) {
 
-function postToFacebookPage(access_token, message) {
-
-/*    request.post(
+   request.post(
         {
-            url: 'https://graph.facebook.com/me/photos?access_token=' + authToken,
+            url: 'https://graph.facebook.com/weedleApp/feed?access_token=' + access_token,
             formData: {
                 message: message,
-                source: fs.createReadStream(imageFile.path)
+                source: fs.createReadStream(imgPath)
             }
         }, function(err, res, body) {
             var bodyJSON = JSON.parse(body);
@@ -37,15 +36,15 @@ function postToFacebookPage(access_token, message) {
                 console.log(bodyJSON.error.message);
             }
         }
-    );*/
+    );
 
 
-    // Specify the URL and query string parameters needed for the request
-    var url = 'https://graph.facebook.com/me/weedleApp';
+    /*// Specify the URL and query string parameters needed for the request
+    var url = 'https://graph.facebook.com/me/feed';
     var params = {
         access_token: access_token,
         message: message,
-        source: fs.createReadStream(imageFile.path)
+        source: fs.createReadStream(imgPath)
     };
 
     // Send the request
@@ -56,7 +55,7 @@ function postToFacebookPage(access_token, message) {
         body = JSON.parse(body);
         if (body.error) return console.error("Error returned from facebook: ", body.error);
 
-    });
+    });*/
 
 }
 
