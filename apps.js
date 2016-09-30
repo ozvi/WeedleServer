@@ -7,17 +7,62 @@ var app = express();
 var requestIp = require('request-ip');
 var firebase = require('firebase');
 var Queue = require('firebase-queue');
+//var request = require('request');
 var multer  = require('multer');
 var upload = multer({ dest: 'uploads/' });
 var fs = require('fs');
 const PORT = 9450;
 const MAX_CLICK_SPEED_MILLIS = 55;
+const FACEBOOK_TOKEN = "EAACEdEose0cBAHjpmCYWyFPXFWjG9t0Db32Ws6ZBtkLaCxjyoGiu8wdV4qQgsIZCB6xbUtDUmDU3C3G9DItsPAiTFZC7011ht3KfqhVQ35Q31Sc6PrgE39jf2JjPl1HQEIFTfrrBT75PJMf8nmGaXkzSLgWYEjpQGD11DPwkgZDZD";
 const MIN_ALLOWED_WINNER_SCORE_GAP = 1000;
 var facebookRequire = require('fb');
-
 facebookRequire.options({version: 'v2.4'});
 var options = facebookRequire.extend({appId: '1152404564834495', appSecret: '6fe1247db8011460545bd9dc39f81d63'});
 var facebook = new facebookRequire.Facebook(options);
+
+//postToFacebookPage(FACEBOOK_TOKEN,"hi");
+
+function postToFacebookPage(access_token, message) {
+
+/*    request.post(
+        {
+            url: 'https://graph.facebook.com/me/photos?access_token=' + authToken,
+            formData: {
+                message: message,
+                source: fs.createReadStream(imageFile.path)
+            }
+        }, function(err, res, body) {
+            var bodyJSON = JSON.parse(body);
+            if(bodyJSON.error) {
+                console.log(bodyJSON.error.message);
+            }
+        }
+    );*/
+
+
+    // Specify the URL and query string parameters needed for the request
+    var url = 'https://graph.facebook.com/me/weedleApp';
+    var params = {
+        access_token: access_token,
+        message: message,
+        source: fs.createReadStream(imageFile.path)
+    };
+
+    // Send the request
+    request.post({url: url, qs: params}, function(err, resp, body) {
+
+        // Handle any errors that occur
+        if (err) return console.error("Error occured: ", err);
+        body = JSON.parse(body);
+        if (body.error) return console.error("Error returned from facebook: ", body.error);
+
+    });
+
+}
+
+
+
+
 
 
 
@@ -100,19 +145,18 @@ function iWon(uid) {
         });
         //not black list
         //now verify he really won
+        console.log("game iWon uid: "+uid);
         var userGameScoresRef = db.ref("gameScores/"+uid);
-        console.log("game itzik1: ");
         userGameScoresRef.once("value", function(snapshot) {
-        console.log(snapshot);
             snapshot.forEach(function(childSnapshot) {
-                console.log("game itzik2: ");
                 var gameObjKey = childSnapshot.key;
+                console.log("game obj key: "+gameObjKey);
                 var gameObj = childSnapshot.val();
-                console.log(gameObj);
-                if (gameObj.game1 != null) {
-                    gameNum = checkReallyWon(1,gameObj.game1,uid);
-                }else if (gameObj.game2 != null) {
-                    gameNum = checkReallyWon(2,gameObj.game2,uid);
+                console.log(gameObj.score);
+                if (gameObjKey == "game1") {
+                    gameNum = checkReallyWon(1,gameObj,uid);
+                }else if (gameObjKey == "game2") {
+                    gameNum = checkReallyWon(2,gameObj,uid);
                 }
             });
             console.log("game num: " + gameNum);
@@ -129,16 +173,16 @@ function iWon(uid) {
                 return;
             }
             //user really won, now needs to login facebook
-            removeUserCallback(uidKey,"iWon");
-            if(isTempBlockedUser(uidKey, gameNum)) {
-                console.log("winner is in a temp block: "+uidKey);
+            removeUserCallback(uid,"iWon");
+            if(isTempBlockedUser(uid, gameNum)) {
+                console.log("winner is in a temp block: "+uid);
                 return;
             }
-            gameObj.pendingWinner = uidKey;
+            gameObj.pendingWinner = uid;
             updateGameStatus(gameNum, STATUS_PENDING_WINNER);
             newPendingWinner(gameNum);
-            calcAndNotifyWinnerHeWon(uidKey, gameNum);
-            startFacebookLoginTimer(gameNum,uidKey);
+            calcAndNotifyWinnerHeWon(uid, gameNum);
+            startFacebookLoginTimer(gameNum,uid);
             console.log("new pending winner for game "+gameNum);
         }, function (errorObject) {
             console.log("The read failed: " + errorObject.code);
@@ -330,9 +374,9 @@ function updateUserWinnerDetails(uid, winnerObj) {
 
 
 
-function pushFacebookPost(facebookToken) {
+function pushFacebookPost() {
 
-    facebook.setAccessToken(facebookToken);
+    facebook.setAccessToken(FACEBOOK_TOKEN);
 
     facebook.api('weedleApp/photos', 'post', {
         source: fs.createReadStream('uploads/test_image.png'),
@@ -345,6 +389,13 @@ function pushFacebookPost(facebookToken) {
         console.log('Post Id: ' + res.post_id);
     })
 }
+
+
+
+
+
+
+
 
 
 
