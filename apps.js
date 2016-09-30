@@ -12,6 +12,7 @@ var upload = multer({ dest: 'uploads/' });
 var fs = require('fs');
 const PORT = 9450;
 const MAX_CLICK_SPEED_MILLIS = 55;
+const MIN_ALLOWED_WINNER_SCORE_GAP = 1000;
 var facebookRequire = require('fb');
 
 facebookRequire.options({version: 'v2.4'});
@@ -66,31 +67,7 @@ usersCallbackRef.on("value", function(snapshot) {
          var uidKey = childSnapshot.key;
          var childData = childSnapshot.val();
          if (childData.iWon) {
-             var gameNum = isUserBlackListed(uidKey);
-             var gameObj = getGameObj(gameNum);
-             if (gameNum == 0) {
-                 addToBlackList(uidKey);
-                 removeUserCallback(uidKey,"");
-                 return;
-             }
-             console.log("user callback i won notice");
-            if(gameObj.status === STATUS_PENDING_WINNER){
-                console.log("adding qWinner: " + uidKey);
-                addToArray(gameObj.qWinners,uidKey);
-                return;
-            }
-             //user really won, now needs to login facebook
-             removeUserCallback(uidKey,"iWon");
-             if(isTempBlockedUser(uidKey, gameNum)) {
-                 console.log("winner is in a temp block: "+uidKey);
-                 return;
-             }
-             gameObj.pendingWinner = uidKey;
-             updateGameStatus(gameNum, STATUS_PENDING_WINNER);
-             newPendingWinner(gameNum);
-             calcAndNotifyWinnerHeWon(uidKey, gameNum);
-             startFacebookLoginTimer(gameNum,uidKey);
-             console.log("new pending winner for game "+gameNum);
+             iWon(uidKey);
          } else if (childData.facebookUser) {
              console.log("user callback new facebook account");
              onWinnerFacebookLogin(uidKey, childData.facebookUser);
@@ -104,6 +81,75 @@ usersCallbackRef.on("value", function(snapshot) {
  }, function (errorObject) {
  console.log("userscallback read failed: " + errorObject.code);
  });
+
+
+
+
+function iWon(uid) {
+
+    var blackListRef = db.ref("blackList");
+    var gameNum = 0;
+// Attach an asynchronous callback to read the data at our posts reference
+    blackListRef.once("value", function(snapshot) {
+        console.log("fffffffffff");
+        snapshot.forEach(function(childSnapshot) {
+            var serverUid = childSnapshot.key;
+            if(serverUid == uid){
+                addToBlackList(uid);
+                return;
+            }
+        });
+        //not black list
+        //now verify he really won
+        var userGameScoresRef = db.ref("gameScores/"+uid);
+        console.log("game itzik1: ");
+        userGameScoresRef.once("value", function(snapshot) {
+            snapshot.forEach(function(childSnapshot) {
+                console.log("game itzik: ");
+                var gameObjKey = childSnapshot.key;
+                var gameObj = childSnapshot.val();
+                if (gameObj.game1) {
+                    gameNum = checkReallyWon(1,gameObj.game1,uid);
+                }else if (gameObj.game2) {
+                    gameNum = checkReallyWon(2,gameObj.game2,uid);
+                }
+            });
+            console.log("game num: " + gameNum);
+            var gameObj = getGameObj(gameNum);
+            if (gameNum == 0) {
+                addToBlackList(uidKey);
+                removeUserCallback(uidKey,"");
+                return;
+            }
+            console.log("user callback i won notice");
+            if(gameObj.status === STATUS_PENDING_WINNER){
+                console.log("adding qWinner: " + uidKey);
+                addToArray(gameObj.qWinners,uidKey);
+                return;
+            }
+            //user really won, now needs to login facebook
+            removeUserCallback(uidKey,"iWon");
+            if(isTempBlockedUser(uidKey, gameNum)) {
+                console.log("winner is in a temp block: "+uidKey);
+                return;
+            }
+            gameObj.pendingWinner = uidKey;
+            updateGameStatus(gameNum, STATUS_PENDING_WINNER);
+            newPendingWinner(gameNum);
+            calcAndNotifyWinnerHeWon(uidKey, gameNum);
+            startFacebookLoginTimer(gameNum,uidKey);
+            console.log("new pending winner for game "+gameNum);
+        }, function (errorObject) {
+            console.log("The read failed: " + errorObject.code);
+        });
+    }, function (errorObject) {
+        console.log("The read failed: " + errorObject.code);
+    });
+}
+
+
+
+
 function isTempBlockedUser(uidKey, gameNum) {
     var gameObj = getGameObj(gameNum);
     for(var i = 0; i < gameObj.blackList.length; i++){
@@ -551,21 +597,6 @@ function updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis) {
 }
 
 
-function isUserBlackListed(uid) {
-    var blackListRef = db.ref("blackList");
-// Attach an asynchronous callback to read the data at our posts reference
-    blackListRef.once("value", function(snapshot) {
-        snapshot.forEach(function(childSnapshot) {
-            var serverUid = childSnapshot.key;
-            if(serverUid == uid)
-                return 0;
-        });
-        return isUserReallyWon(uid);
-    }, function (errorObject) {
-        console.log("The read failed: " + errorObject.code);
-    });
-
-}
 
 
 function checkReallyWon(gameNum, gameScoreObj, uid) {
@@ -575,74 +606,13 @@ function checkReallyWon(gameNum, gameScoreObj, uid) {
     }else{
         var timeGap = getCurrentMillis() - gameScoreObj.lastUpdateMillis;
         var speed = timeGap/scoreGap;
-        if(speed < MAX_CLICK_SPEED_MILLIS){
+        if(speed < MAX_CLICK_SPEED_MILLIS && scoreGap < MIN_ALLOWED_WINNER_SCORE_GAP){
             return gameNum;
         }else{
             addToBlackList(uid)
             return 0;
         }
     }
-}
-function isUserReallyWon(uid) {
-
-    var userGameScoresRef = db.ref("gameScores/"+uid);
-    userGameScoresRef.once("value", function(snapshot) {
-        try {
-            snapshot.forEach(function(childSnapshot) {
-                var gameObjKey = childSnapshot.key;
-                var gameObj = childSnapshot.val();
-                var gameNum = 0;
-                if (gameObj.game1) {
-                    gameNum = checkReallyWon(1,gameObj.game1,uid);
-                    if(gameNum != 0)return gameNum;
-                }else if (gameObj.game2) {
-                    gameNum = checkReallyWon(2,gameObj.game2,uid);
-                    if(gameNum != 0)return gameNum;
-                }
-                return gameNum;
-            });
-
-
-
-
-
-
-
-
-            var gameScoreObj = snapshot.val();
-            var scoreGap = gameScoreTask.score - gameScoreObj.score;
-            if(scoreGap == 0)return;
-            var timeGap = currentTimeMillis - gameScoreObj.lastUpdateMillis;
-            var speed = timeGap/scoreGap;
-            console.log("scoreGap: " + scoreGap);
-            console.log("timeGap: " + timeGap);
-            console.log("speed: " + speed);
-
-            if(speed < MAX_CLICK_SPEED_MILLIS){
-                addToBlackList(gameScoreTask.uid);
-            }else{
-                updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis);
-
-            }
-        }
-        catch(err) {
-            updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis);
-        }
-    }, function (errorObject) {
-        console.log("The read failed: " + errorObject.code);
-    });
-
-    //TODO FOR NOW ALWAYS RETURNING 1, NEED TO RETURN 0 WHEN NOTHING FOUND
-    return 1;
-    /*console.log("making sure user really won "+uid);
-     if(game1.pendingWinner == uid){
-     return 1;
-     } else if(game2.pendingWinner == uid){
-     return 2;
-     }*/
-    // console.log("User didn\'t really win - "+uid);
-    // return 0;
-
 }
 
 /*
