@@ -27,7 +27,7 @@ function postToFacebookPage(access_token, message, imgPath) {
         {
             url: 'https://graph.facebook.com/weedleApp/feed?access_token=' + access_token,
             formData: {
-                message: message
+                message: message,
                 source: __dirname+imgPath
             }
         }, function(err, res, body) {
