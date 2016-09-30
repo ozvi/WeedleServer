@@ -22,13 +22,13 @@ var facebook = new facebookRequire.Facebook(options);
 postToFacebookPage(FACEBOOK_TOKEN,"hi4","/uploads/test_image.png");
 
 function postToFacebookPage(access_token, message, imgPath) {
-    console.log(__dirname+imgPath);
+    console.log("http://ec2-52-33-240-114.us-west-2.compute.amazonaws.com:9450"+__dirname+imgPath);
    request.post(
         {
             url: 'https://graph.facebook.com/weedleApp/feed?access_token=' + access_token,
             formData: {
                 message: message,
-                source: __dirname+imgPath
+                source: "http://ec2-52-33-240-114.us-west-2.compute.amazonaws.com:9450"+__dirname+imgPath
             }
         }, function(err, res, body) {
             var bodyJSON = JSON.parse(body);
