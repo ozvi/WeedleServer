@@ -103,10 +103,13 @@ function iWon(uid) {
         var userGameScoresRef = db.ref("gameScores/"+uid);
         console.log("game itzik1: ");
         userGameScoresRef.once("value", function(snapshot) {
+        console.log(snapshot);
             snapshot.forEach(function(childSnapshot) {
-                console.log("game itzik: ");
+                console.log("game itzik2: ");
                 var gameObjKey = childSnapshot.key;
                 var gameObj = childSnapshot.val();
+                console.log(gameObj);
+
                 if (gameObj.game1) {
                     gameNum = checkReallyWon(1,gameObj.game1,uid);
                 }else if (gameObj.game2) {
