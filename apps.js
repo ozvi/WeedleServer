@@ -589,6 +589,7 @@ function verifyGameScore(gameScoreTask) {
     });
 }
 function updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis) {
+    if(gameScoreTask.score == null) return;
         console.log("New game score: " + gameScoreTask.score);
     gameScoresRef.set({
         "score":gameScoreTask.score,
