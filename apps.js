@@ -149,7 +149,7 @@ usersCallbackRef.on("value", function(snapshot) {
          var uidKey = childSnapshot.key;
          var childData = childSnapshot.val();
          if (childData.iWon) {
-             iWon(uidKey);
+             iWon(uidKey,childData.iWon);
          } else if (childData.facebookUser) {
              console.log("user callback new facebook account");
              onWinnerFacebookLogin(uidKey, childData.facebookUser);
@@ -167,9 +167,9 @@ usersCallbackRef.on("value", function(snapshot) {
 
 
 
-function iWon(uid) {
+
+function iWon(uid,gameNum) {
     var blackListRef = db.ref("blackList");
-    var gameNum = 0;
 // Attach an asynchronous callback to read the data at our posts reference
     blackListRef.once("value", function(snapshot) {
         console.log("fffffffffff");
@@ -183,26 +183,18 @@ function iWon(uid) {
         //not black list
         //now verify he really won
         console.log("game iWon uid: "+uid);
-        var userGameScoresRef = db.ref("gameScores/"+uid);
+        var userGameScoresRef = db.ref("gameScores/game"+gameNum+"/"+uid);
         userGameScoresRef.once("value", function(snapshot) {
-            snapshot.forEach(function(childSnapshot) {
-                var gameObjKey = childSnapshot.key;
-                console.log("game obj key: "+gameObjKey);
-                var gameObj = childSnapshot.val();
-                console.log(gameObj.score);
-                if (gameObjKey == "game1") {
-                    gameNum = checkReallyWon(1,gameObj,uid);
-                }else if (gameObjKey == "game2") {
-                    gameNum = checkReallyWon(2,gameObj,uid);
-                }
-            });
-            console.log("game num: " + gameNum);
-            var gameObj = getGameObj(gameNum);
+            var gameScoreObj = snapshot.val();
+            console.log("winner game score: "+gameScoreObj.score);
+            gameNum = checkReallyWon(gameNum,gameScoreObj,uid);
+            console.log("winner found for game " + gameNum);
             if (gameNum == 0) {
                 addToBlackList(uid);
                 removeUserCallback(uid,"iWon");
                 return;
             }
+            var gameObj = getGameObj(gameNum);
             console.log("user callback i won notice");
             if(gameObj.status === STATUS_PENDING_WINNER){
                 console.log("adding qWinner: " + uidKey);
@@ -460,17 +452,14 @@ function getWinnerGameNum(uid) {
 }
 
 
-function resetGameScores() {
-    //TODO RESET BY GAME NUM
-    console.log("resting game scores")
-    var gameScoresRef = db.ref("gameScores");
-    gameScoresRef.set(null);
-}
+
 function resetGame(gameNum){
     if(gameNum == 1){
         game1 = gamePreset;
+        game1ActiveUsersScores = {};
     }else if(gameNum == 2){
         game2 = gamePreset;
+        game2ActiveUsersScores = {};
     }
 }
 
@@ -662,9 +651,14 @@ var gameScoresQueue = new Queue(firebaseQueueRef,options, function(gameScoreTask
         resolve();
     }, 0);
 });
-
+function resetGameScores(gameNum) {
+    //TODO RESET BY GAME NUM
+    console.log("resting game scores")
+    var gameScoresRef = db.ref("gameScores/game"+gameNum);
+    gameScoresRef.set(null);
+}
 function verifyGameScore(gameScoreTask) {
-    var gameScoresRef = db.ref("gameScores/"+gameScoreTask.uid+"/game"+gameScoreTask.gameNum);
+    var gameScoresRef = db.ref("gameScores/game"+gameScoreTask.gameNum+"/"+gameScoreTask.uid);
     var currentTimeMillis = getCurrentMillis();
     gameScoresRef.once("value", function(snapshot) {
         try {
@@ -710,8 +704,7 @@ function updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis) {
 
 function checkReallyWon(gameNum, gameScoreObj, uid) {
     console.log("game"+ gameNum+" score object:");
-    console.log(gameScoreObj);
-    var scoreGap = gameScoreObj.score - getGameObj(1).gameSize;
+    var scoreGap = gameScoreObj.score - getGameObj(gameNum).gameSize;
     console.log("Score gap: " + scoreGap);
     if(scoreGap == 0){
         return gameNum;
