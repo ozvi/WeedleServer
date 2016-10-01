@@ -20,9 +20,10 @@ var facebookRequire = require('fb');
 facebookRequire.options({version: 'v2.4'});
 var options = facebookRequire.extend({appId: '1152404564834495', appSecret: '6fe1247db8011460545bd9dc39f81d63'});
 var facebook = new facebookRequire.Facebook(options);
-postToFacebookPage(FACEBOOK_TOKEN,"hi5","/game1/winnerImage");
+postToFacebookPage(FACEBOOK_TOKEN,"hi7","/game1/winnerImage");
 
 function postToFacebookPage(access_token, message, imgPath) {
+    var imageData  = canvas.toDataURL(_dirname+imgPath);
     console.log("http://ec2-52-33-240-114.us-west-2.compute.amazonaws.com:9450"+imgPath);
     console.log(__dirname+imgPath);
    request.post(
@@ -30,7 +31,7 @@ function postToFacebookPage(access_token, message, imgPath) {
             url: 'https://graph.facebook.com/weedleApp/feed?access_token=' + access_token,
             formData: {
                 message: message,
-                source: "http://ec2-52-33-240-114.us-west-2.compute.amazonaws.com:9450/game1/winnerImage"
+                source: dataURItoBlob(imageData)
             }
         }, function(err, res, body) {
             var bodyJSON = JSON.parse(body);
@@ -67,7 +68,15 @@ function postToFacebookPage(access_token, message, imgPath) {
 
 
 
-
+function dataURItoBlob(dataURI) {
+    var byteString = atob(dataURI.split(',')[1]);
+    var ab = new ArrayBuffer(byteString.length);
+    var ia = new Uint8Array(ab);
+    for (var i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], { type: 'image/png' });
+}
 
 
 
