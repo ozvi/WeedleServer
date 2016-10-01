@@ -20,6 +20,7 @@ var restler = require('restler');
 var upload = multer({ dest: 'uploads/' });
 var fs = require('fs');
 const PORT = 9450;
+const MEDIAN_BAR_INTERVAL = 1000*10;
 const MAX_CLICK_SPEED_MILLIS = 55;
 const MIN_FIRST_COMMIT_SCORE = 2000; // the max allowed first score queue request
 const MIN_ALLOWED_WINNER_SCORE_GAP = 1000;
@@ -65,6 +66,7 @@ firebase.initializeApp({
 });
 
 var db = firebase.database();
+medianCalcInfinateLoop(MEDIAN_BAR_INTERVAL);
 //start the node server
 app.set('port', process.env.PORT || PORT);
 
@@ -151,7 +153,7 @@ function getActiveUsersScoresObj(gameNum) {
         return game1ActiveUsersScores;
     }
 }
-function getMedianBarPercent() {
+function pushNewMedianToGames() {
     for(i = 0; i < activeGames.length; i++){
     var gameNum = i+1;
     var activeUsersObj = getActiveUsersScoresObj();
@@ -192,7 +194,7 @@ function getMedianBarPercent() {
 
 function medianCalcInfinateLoop(interval) {
     function go () {
-        getMedianBarPercent();
+        pushNewMedianToGames();
         setTimeout(go,interval);
     }
     go();
