@@ -69,10 +69,11 @@ function postToFacebookPage(gameObj, imgName) {
                 source: fs.createReadStream(path)
             }
         }, function(err, res, body) {
-            var bodyJSON = JSON.parse(body);
+                console.log(body);
+           /* var bodyJSON = JSON.parse(body);
             if(bodyJSON.error) {
                 console.log(bodyJSON.error.message);
-            }
+            }*/
         }
     );
 
