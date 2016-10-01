@@ -155,9 +155,11 @@ function getActiveUsersScoresObj(gameNum) {
 }
 function pushNewMedianToGames() {
     for(i = 0; i < activeGames.length; i++){
-    var gameNum = i+1;
-    var activeUsersObj = getActiveUsersScoresObj(gameNum);
-    var usersCount = Object.keys(activeUsersObj).length;
+        var gameNum = i+1;
+        var gameObj = getGameObj(gameNum);
+        if(gameObj.gameSize == 0)return;
+        var activeUsersObj = getActiveUsersScoresObj(gameNum);
+        var usersCount = Object.keys(activeUsersObj).length;
 
         var sortsScores = [];
         for (var user in activeUsersObj)
@@ -181,7 +183,7 @@ function pushNewMedianToGames() {
             median =  (firstArg[1]+secArg[1])/2;
         }
         console.log("median " + median);
-        var percent = parseInt((median/getGameObj(gameNum).gameSize)*100);
+        var percent = parseInt((median/gameObj.gameSize)*100);
   /*  for (var key in activeUsersObj) {
         if (activeUsersObj.hasOwnProperty(key)) {
             scoreCount += activeUsersObj[key];
