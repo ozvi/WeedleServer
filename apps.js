@@ -110,7 +110,7 @@ function getMedianBarPercent(gameNum) {
     var scoreCount = 0;
     for (var key in activeUsersObj) {
         if (activeUsersObj.hasOwnProperty(key)) {
-            scoreCount += p[key];
+            scoreCount += activeUsersObj[key];
         }
     }
     var avrgScore = parseInt(scoreCount/usersCount);
