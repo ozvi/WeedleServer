@@ -149,9 +149,9 @@ app.post('/file_upload', upload.single('png'), function (req, res, next) {
     var gameObj = getGameObj(parseInt(gameNum));
     var uid = req.body.uid;
     var imgFileName = req.file.filename;
-    if(!imgFileName.includes(".png")){
+   /* if(imgFileName.includes(".png")){
         imgFileName += ".png";
-    }
+    }*/
     console.log('uid from file: '+ uid);
     console.log('image name: '+ imgFileName);
      postToFacebookPage(gameObj,imgFileName);
