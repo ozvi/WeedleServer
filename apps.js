@@ -23,7 +23,7 @@ var upload = multer({ dest: 'uploads/' });
 var fs = require('fs');
 const PORT = 9450;
 const MAX_CLICK_SPEED_MILLIS = 55;
-const FACEBOOK_TOKEN = "EAAQYGxi5eL8BADcYy2jSGKlkwe8qz37jKXGd4LzTi5PtICszBIDJqcy1ZAr83yAvIfZBpOTr7NnPhrZCWmVqfjsWKekaY4v7ueeinCSjtC06vydrZCkcTnqKbZAPZCVNJZA0QHLPvE7K4Klrb3dinUquI2stuzv3JGR3r9Ox6xtcAZDZD";
+const FACEBOOK_TOKEN = "EAAQYGxi5eL8BAOGxW5Yl3VKU02joSo1wMaWonYGBrlSjMkwwXbUYZAduAZBR20rnnowBbT6Lt9ZCt3lzGB1GIcKw8XAgT2Lz1Xr9v6fYpelfmMo23r3G4QGjfZACb5jL8dFM56qktvHpNdQsQ9g0tl4A66SkZC66dKHBI2ntREAZDZD";
 const MIN_ALLOWED_WINNER_SCORE_GAP = 1000;
 var facebookRequire = require('fb');
 facebookRequire.options({version: 'v2.4'});
@@ -37,7 +37,7 @@ function postToFacebookPage(gameObj, imgName) {
     var path = __dirname + "/uploads/" + imgName;
     var idString = "[{'tag_uid':'" + winnerObj.facebookId + "','x':0,'y':0}]";
     console.log(idString);
-    /*fs.stat(path, function (err, stats) {
+    fs.stat(path, function (err, stats) {
         restler.post("https://graph.facebook.com/me/photos?access_token=" + FACEBOOK_TOKEN, {
             multipart: true,
             data: {
@@ -57,8 +57,8 @@ function postToFacebookPage(gameObj, imgName) {
 
 
         });
-    });*/
-    request.post(
+    });
+    /*request.post(
         {
             url: "https://graph.facebook.com/me/photos?access_token=" + FACEBOOK_TOKEN,
             formData: {
@@ -71,7 +71,7 @@ function postToFacebookPage(gameObj, imgName) {
                 console.log(bodyJSON.error.message);
             }
         }
-    );
+    );*/
 
 }
 
