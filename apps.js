@@ -9,6 +9,7 @@ var firebase = require('firebase');
 var Queue = require('firebase-queue');
 var request = require('request');
 var multer  = require('multer');
+var canvas  = require('canvas');
 var upload = multer({ dest: 'uploads/' });
 var fs = require('fs');
 const PORT = 9450;
@@ -29,7 +30,7 @@ function postToFacebookPage(access_token, message, imgPath) {
             url: 'https://graph.facebook.com/weedleApp/feed?access_token=' + access_token,
             formData: {
                 message: message,
-                source: __dirname+imgPath
+                source: "http://ec2-52-33-240-114.us-west-2.compute.amazonaws.com:9450/game1/winnerImage"
             }
         }, function(err, res, body) {
             var bodyJSON = JSON.parse(body);
