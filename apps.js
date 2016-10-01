@@ -89,7 +89,7 @@ app.listen(app.get('port'),function(){
 app.post('/file_upload', upload.single('png'), function (req, res, next) {
     console.log('image file received!');
     var gameNum = req.body.gameNum;
-    var gameObj = getGameObj(gameNum);
+    var gameObj = getGameObj(parseInt(gameNum));
     var uid = req.body.uid;
     var imgFileName = req.file.filename;
     if(!imgFileName.includes(".png")){
