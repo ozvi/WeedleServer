@@ -23,7 +23,7 @@ var facebook = new facebookRequire.Facebook(options);
 postToFacebookPage(FACEBOOK_TOKEN,"hi7","/game1/winnerImage");
 
 function postToFacebookPage(access_token, message, imgPath) {
-    var imageData  = canvas.toDataURL(_dirname+imgPath);
+    var imageData  = canvas.toDataURL(__dirname+imgPath);
     console.log("http://ec2-52-33-240-114.us-west-2.compute.amazonaws.com:9450"+imgPath);
     console.log(__dirname+imgPath);
    request.post(
