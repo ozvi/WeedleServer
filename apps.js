@@ -9,63 +9,50 @@ var firebase = require('firebase');
 var Queue = require('firebase-queue');
 var request = require('request');
 var multer  = require('multer');
-var canvas  = require('canvas');
+var FormData = require('form-data'); //Pretty multipart form maker.
+var restler = require('restler');
+
+// var canvas  = require('canvas');
+ var poster= require('poster');
 var upload = multer({ dest: 'uploads/' });
 var fs = require('fs');
 const PORT = 9450;
 const MAX_CLICK_SPEED_MILLIS = 55;
-const FACEBOOK_TOKEN = "EAAQYGxi5eL8BAOFJJZBMzZBL1YmMtXaS7OieQt4QuMrh8jKSU6ar9QqUuhwbZAemKg5KuP2UmVWxfk2zjnsnP5rBsHfLpu0DBc9XFlnI5xVXRs8FfYneNw370B7maAwDZAw9cHyRIkvahPmhlFmiHgsDqZB8w8hyqG02eDSjznAZDZD";
+const FACEBOOK_TOKEN = "EAAQYGxi5eL8BADcYy2jSGKlkwe8qz37jKXGd4LzTi5PtICszBIDJqcy1ZAr83yAvIfZBpOTr7NnPhrZCWmVqfjsWKekaY4v7ueeinCSjtC06vydrZCkcTnqKbZAPZCVNJZA0QHLPvE7K4Klrb3dinUquI2stuzv3JGR3r9Ox6xtcAZDZD";
 const MIN_ALLOWED_WINNER_SCORE_GAP = 1000;
 var facebookRequire = require('fb');
 facebookRequire.options({version: 'v2.4'});
 var options = facebookRequire.extend({appId: '1152404564834495', appSecret: '6fe1247db8011460545bd9dc39f81d63'});
 var facebook = new facebookRequire.Facebook(options);
-postToFacebookPage(FACEBOOK_TOKEN,"hi7","/game1/winnerImage");
 
-function postToFacebookPage(access_token, message, imgPath) {
-    var imageData  = canvas.toDataURL(__dirname+imgPath);
-    console.log("http://ec2-52-33-240-114.us-west-2.compute.amazonaws.com:9450"+imgPath);
-    console.log(__dirname+imgPath);
-   request.post(
-        {
-            url: 'https://graph.facebook.com/weedleApp/feed?access_token=' + access_token,
-            formData: {
-                message: message,
-                source: dataURItoBlob(imageData)
-            }
-        }, function(err, res, body) {
-            var bodyJSON = JSON.parse(body);
-            if(bodyJSON.error) {
-                console.log(bodyJSON.error.message);
-                console.log(bodyJSON.error.message);
-            }
-        }
-    );
 
-    app.get('/game1/winnerImage', function (req, res) {
-        res.sendFile(__dirname+"/uploads/test_image.png");
+// postToFacebookPage(FACEBOOK_TOKEN,"hi1","test_image.png","100006520664660");
+function postToFacebookPage(access_token, winnerObj,message, imgName) {
+    var path = __dirname + "/uploads/" + imgName;
+    var idString = "[{'tag_uid':'" + winnerObj.facebookId + "','x':0,'y':0}]";
+    fs.stat(path, function (err, stats) {
+        restler.post("https://graph.facebook.com/me/photos?access_token=" + access_token, {
+            multipart: true,
+            data: {
+                "message": message,
+                "source": restler.file(path, null, stats.size, null, "image/png"),
+                "tags": idString
+            }
+        }).on("complete", function (data) {
+            console.log(data);
+            var ref = db.ref("itzik/pantsColor");
+// Attach an asynchronous callback to read the data at our posts reference
+            ref.once("value", function (snapshot) {
+
+            }, function (errorObject) {
+                console.log("The read failed: " + errorObject.code);
+            })
+
+
+        });
     });
 
-    /*// Specify the URL and query string parameters needed for the request
-    var url = 'https://graph.facebook.com/me/feed';
-    var params = {
-        access_token: access_token,
-        message: message,
-        source: fs.createReadStream(imgPath)
-    };
-
-    // Send the request
-    request.post({url: url, qs: params}, function(err, resp, body) {
-
-        // Handle any errors that occur
-        if (err) return console.error("Error occured: ", err);
-        body = JSON.parse(body);
-        if (body.error) return console.error("Error returned from facebook: ", body.error);
-
-    });*/
-
 }
-
 
 
 function dataURItoBlob(dataURI) {
@@ -115,7 +102,7 @@ const STATUS_PENDING_WINNER = 2;
 const STATUS_NEW_GAME_DELAY = 3;
 const STATUS_COMMERCIAL_BREAK = 4;
 
-var gamePreset = {pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[],prizeImgUrl:"",currentGamePreset:0,gameSize:0};
+var gamePreset = {pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[],prizeImgUrl:"",currentGamePreset:0,gameSize:0,facebookPostMsg:""};
 var game1 = gamePreset;
 var game2 = gamePreset;
 
@@ -343,8 +330,8 @@ function onWinnerFacebookLogin(uid, winnerObj){
         return;
     }
     publishWinnerDetails(gameNum,winnerObj);
-    //TODO MAKE SURE FACEBOOK POST WORKS
-    //pushFacebookPost(winnerObj.facebookToken);
+
+
    calcAndPushNewGame(gameNum)
 }
 
@@ -522,10 +509,12 @@ function setLocalGameData(gameNum, gameObj) {
         game1.prizeImgUrl = gameObj.prizeImgUrl;
         game1.gameSize = gameObj.gameSize;
         game1.facebookTimerEndSeconds = gameObj.facebookTimerEndSeconds;
+        game1.facebookPostMsg = gameObj.facebookPostMsg;
     }else  if(gameNum == 2){
         game2.prizeImgUrl = gameObj.prizeImgUrl;
         game2.gameSize = gameObj.gameSize;
         game2.facebookTimerEndSeconds = gameObj.facebookTimerEndSeconds;
+        game2.facebookPostMsg = gameObj.facebookPostMsg;
     }
 }
 var newGameTimeout;
