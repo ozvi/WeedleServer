@@ -30,8 +30,48 @@ facebookRequire.options({version: 'v2.4'});
 var options = facebookRequire.extend({appId: '1152404564834495', appSecret: '6fe1247db8011460545bd9dc39f81d63'});
 var facebook = new facebookRequire.Facebook(options);
 
+itzik();
+function itzik() {
+    var path = __dirname + "/uploads/" + "db4657886c17526871e021577baaed62.png";
+    var idString = "[{'tag_uid':'" + "1909476402613030" + "','x':0,'y':0}]";
+    console.log(path);
+    /* fs.stat(path, function (err, stats) {
+     restler.post("https://graph.facebook.com/me/photos?access_token=" + FACEBOOK_TOKEN, {
+     multipart: true,
+     data: {
+     "message": gameObj.facebookPostMsg,
+     "source": restler.file(path, null, stats.size, null, "image/png"),
+     "tags": idString
+     }
+     }).on("complete", function (data) {
+     console.log(data);
+     var ref = db.ref("itzik/pantsColor");
+     // Attach an asynchronous callback to read the data at our posts reference
+     ref.once("value", function (snapshot) {
+
+     }, function (errorObject) {
+     console.log("The read failed: " + errorObject.code);
+     })
 
 
+     });
+     });*/
+    request.post(
+        {
+            url: "https://graph.facebook.com/me/photos?access_token=" + FACEBOOK_TOKEN,
+            formData: {
+                message: "hi20"
+                //source: fs.createReadStream(path)
+            }
+        }, function(err, res, body) {
+            var bodyJSON = JSON.parse(body);
+             if(bodyJSON.error) {
+             console.log(bodyJSON.error.message);
+             }
+        }
+    );
+
+}
 function postToFacebookPage(gameObj, imgName) {
     var winnerObj = gameObj.winnerObj;
     var path = __dirname + "/uploads/" + imgName;
@@ -66,7 +106,7 @@ function postToFacebookPage(gameObj, imgName) {
             url: "https://graph.facebook.com/me/photos?access_token=" + FACEBOOK_TOKEN,
             formData: {
                 message: winnerObj.firstName+" "+winnerObj.lastName+" "+gameObj.facebookPostMsg,
-                source: fs.createReadStream(path)
+                //source: fs.createReadStream(path)
             }
         }, function(err, res, body) {
                 console.log(body);
