@@ -116,7 +116,7 @@ function postToFacebookPage(gameObj, imgName) {
                 console.log("Updating facebook post url to game "+gameObj.gameNum);
                 var facebookPostIdRef = db.ref("games/game" + gameObj.gameNum + "/facebookPostLink");
                 // Attach an asynchronous callback to read the data at our posts reference
-                facebookPostIdRef.set(FACEBOOK_POST_URL_PREFIX + data.id);
+                facebookPostIdRef.set(FACEBOOK_POST_URL_PREFIX + data.id+"*"+data.post_id);
             }
         });
     });
