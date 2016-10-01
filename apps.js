@@ -105,8 +105,18 @@ function getActiveUsersScoresObj(gameNum) {
     }
 }
 function getMedianBarPercent(gameNum) {
-var activeUsersObj = getActiveUsersScoresObj(gameNum);
-    var count = Object.keys(myObject).length
+    var activeUsersObj = getActiveUsersScoresObj(gameNum);
+    var usersCount = Object.keys(activeUsersObj).length;
+    var scoreCount = 0;
+    for (var key in p) {
+        if (p.hasOwnProperty(key)) {
+            scoreCount += p[key];
+        }
+    }
+    var avrgScore = parseInt(scoreCount/usersCount);
+    var percent = parseInt((avrgScore/getGameObj(gameNum).gameSize)*100);
+    console.log("median percent: " + percent);
+    return percent;
 }
 
 firebase.initializeApp({
@@ -700,6 +710,8 @@ function updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis) {
         "score":gameScoreTask.score,
         "lastUpdateMillis":currentTimeMillis
     });
+    //TODO REMOVE TEST FROM HERE - PUT IT IN THE IRGHT PLACE INSTEAD
+    getMedianBarPercent(gameScoreTask.gameNum);
 }
 
 
