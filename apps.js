@@ -112,7 +112,6 @@ function postToFacebookPage(gameObj, imgName) {
         }).on("complete", function (data) {
             if(data.id) {
                 console.log("Facebook post success!");
-                console.log(data);
                 console.log("Updating facebook post url to game "+gameObj.gameNum);
                 var facebookPostIdRef = db.ref("games/game" + gameObj.gameNum + "/facebookPostLink");
                 // Attach an asynchronous callback to read the data at our posts reference
@@ -553,7 +552,6 @@ function pushNewGame(gameNum, gameStartTime){
             "prizeImgUrl": gameObj.prizeImgUrl,
             "prizeName": gameObj.prizeName,
             "pendingWinnerInfo": null,
-            "facebookPostLink": null,
             "pendingWinnerUid": null,
             "newGameStarted": false,
             "startTimeMillis": gameStartTime+gameObj.secsDelay*1000,
@@ -593,6 +591,7 @@ function startGameTimer (seconds, gameRef) {
         "gameRunning": true,
         "pendingWinner": null,
         "newGameStarted": true,
+         "facebookPostLink": null,
         "winner": null,
         "medianBarPercent": 0,
         "resetGameScores": false
