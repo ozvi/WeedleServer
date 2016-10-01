@@ -104,7 +104,10 @@ function getActiveUsersScoresObj(gameNum) {
         return game1ActiveUsersScores;
     }
 }
-
+function getMedianBarPercent(gameNum) {
+var activeUsersObj = getActiveUsersScoresObj(gameNum);
+    var count = Object.keys(myObject).length
+}
 
 firebase.initializeApp({
     serviceAccount: "./Weedle-69d94723eed7.json",
@@ -497,14 +500,14 @@ function pushNewGame(gameNum, gameStartTime){
     if(newGameTimeout != null){
         clearTimeout(newGameTimeout);
     }
-    resetGameScores();
+    resetGameScores(gameNum);
     incrementCurrentGamePreset(gameNum);
     updateGameStatus(gameNum, STATUS_GAME_RUNNING);
     resetGame(gameNum);
     var localGameObj = getGameObj(gameNum);
     var gamesPresetsRef = db.ref("gamePresets/game"+gameNum+"/"+localGameObj.currentGamePreset);
     // Attach an asynchronous callback to read the data at our posts reference
-    console.log("currentRunningGame: "+localGameObj.currentGamePreset);
+    console.log("loading game preset number "+localGameObj.currentGamePreset);
     gamesPresetsRef.once("value", function(snapshot) {
         var gameObj = snapshot.val()
         if(gameObj == null){
