@@ -32,14 +32,15 @@ var facebook = new facebookRequire.Facebook(options);
 
 
 
-function postToFacebookPage(access_token, winnerObj,message, imgName) {
+function postToFacebookPage(gameObj, imgName) {
+    var winnerObj = gameObj.winnerObj;
     var path = __dirname + "/uploads/" + imgName;
     var idString = "[{'tag_uid':'" + winnerObj.facebookId + "','x':0,'y':0}]";
     fs.stat(path, function (err, stats) {
-        restler.post("https://graph.facebook.com/me/photos?access_token=" + access_token, {
+        restler.post("https://graph.facebook.com/me/photos?access_token=" + FACEBOOK_TOKEN, {
             multipart: true,
             data: {
-                "message": message,
+                "message": gameObj.facebookPostMsg,
                 "source": restler.file(path, null, stats.size, null, "image/png"),
                 "tags": idString
             }
@@ -88,10 +89,12 @@ app.listen(app.get('port'),function(){
 app.post('/file_upload', upload.single('png'), function (req, res, next) {
     console.log('image file received!');
     var gameNum = req.body.gameNum;
+    var gameObj = getGameObj(gameNum);
     var uid = req.body.uid;
     var imgFile = req.file;
-    console.log('uid from file:'+ uid);
-    // postToFacebookPage(FACEBOOK_TOKEN,"hi1","test_image.png","100006520664660");
+    console.log('uid from file: '+ uid);
+    console.log('image name: '+ imgFile.filename);
+     postToFacebookPage(gameObj,imgFile.filename);
     //TODO NEED TO RENAME FILE BASED ON GAMENUM AND USER UID
 });
 
@@ -331,10 +334,18 @@ function onWinnerFacebookLogin(uid, winnerObj){
         addToBlackList(uid);
         return;
     }
+    updateLocalGameObjNewWinner(gameNum,winnerObj);
     publishWinnerDetails(gameNum,winnerObj);
 
 
    calcAndPushNewGame(gameNum)
+}
+function updateLocalGameObjNewWinner(gameNum,winnerObj) {
+    if(gameNum == 1){
+        game1.winnerObj = winnerObj;
+    }else if(gameNum == 2){
+        game2.winnerObj = winnerObj;
+    }
 }
 
 function publishWinnerDetails(gameNum, winnerObj) {
