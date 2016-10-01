@@ -81,7 +81,7 @@ function postToFacebookPage(gameObj, imgName) {
     console.log(gameObj);
     console.log(path);
 
-    request.post(
+   /* request.post(
         {
             url: "https://graph.facebook.com/me/photos?access_token=" + FACEBOOK_TOKEN,
             formData: {
@@ -94,8 +94,8 @@ function postToFacebookPage(gameObj, imgName) {
                 console.log(bodyJSON.error.message);
             }
         }
-    );
-    /* fs.stat(path, function (err, stats) {
+    );*/
+     fs.stat(path, function (err, stats) {
      restler.post("https://graph.facebook.com/me/photos?access_token=" + FACEBOOK_TOKEN, {
      multipart: true,
      data: {
@@ -113,9 +113,8 @@ function postToFacebookPage(gameObj, imgName) {
      console.log("The read failed: " + errorObject.code);
      })
 
-
      });
-     });*/
+     });
 }
 
 
