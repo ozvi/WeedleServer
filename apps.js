@@ -168,6 +168,7 @@ function pushNewMedianToGames() {
             }
         )
     if(sortsScores.length == 0)return;
+
         var median = 0;
         if(usersCount%2 != 0){
             var scoreArray =  sortsScores[((usersCount+1)/2)-1];
@@ -179,8 +180,8 @@ function pushNewMedianToGames() {
             var secArg = sortsScores[usersCount/2];
             median =  (firstArg[1]+secArg[1])/2;
         }
+        console.log("median " + median);
         var percent = parseInt((median/getGameObj(gameNum).gameSize)*100);
-        console.log("percent " + percent);
   /*  for (var key in activeUsersObj) {
         if (activeUsersObj.hasOwnProperty(key)) {
             scoreCount += activeUsersObj[key];
