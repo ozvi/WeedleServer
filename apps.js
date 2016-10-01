@@ -1,6 +1,7 @@
 /**
  * Created by zvi on 8/8/2016.
  */
+//getMedianBarPercent(gameNum);
 var express = require('express');
 var app = express();
 var bodyParser = require('body-parser')
@@ -52,6 +53,45 @@ var game2ActiveUsersScores = {};
 
 
 
+
+
+firebase.initializeApp({
+    serviceAccount: "./Weedle-69d94723eed7.json",
+    databaseURL: "https://weedle-27e37.firebaseio.com",
+    databaseAuthVariableOverride: {
+        uid: "server_worker_1"
+    }
+});
+
+var db = firebase.database();
+//start the node server
+app.set('port', process.env.PORT || PORT);
+
+app.get('/' ,function (req,res) {
+    var clientIp = requestIp.getClientIp(req);
+    res.send('You shouldn\'t be here buddy. We\'ll hold on to your IP just in case ' + clientIp);
+});
+app.listen(app.get('port'),function(){
+    console.log('server started on port itzik '+ app.get('port'));
+});
+
+// get winner social image file
+app.post('/file_upload', upload.single('png'), function (req, res, next) {
+    console.log('image file received!');
+    var gameNum = req.body.gameNum;
+    var gameObj = getGameObj(parseInt(gameNum));
+    var uid = req.body.uid;
+    var imgFileName = req.file.filename;
+    /* if(imgFileName.includes(".png")){
+     imgFileName += ".png";
+     }*/
+    console.log('uid from file: '+ uid);
+    console.log('image name: '+ imgFileName);
+    postToFacebookPage(gameObj,imgFileName);
+});
+
+
+
 function postToFacebookPage(gameObj, imgName) {
     var winnerObj = gameObj.winnerObj;
     var path = __dirname + "/uploads/" + imgName;
@@ -73,7 +113,7 @@ function postToFacebookPage(gameObj, imgName) {
             if(data.id) {
                 console.log("Facebook post success!");
                 console.log("Updating facebook post url to game "+gameObj.gameNum);
-                var facebookPostIdRef = db.ref("game/game" + gameObj.gameNum + "/facebookPostUrl");
+                var facebookPostIdRef = db.ref("games/game" + gameObj.gameNum + "/facebookPostUrl");
                 // Attach an asynchronous callback to read the data at our posts reference
                 facebookPostIdRef.set(FACEBOOK_POST_URL_PREFIX + data.id);
             }
@@ -119,42 +159,18 @@ function getMedianBarPercent(gameNum) {
     return percent;
 }
 
-firebase.initializeApp({
-    serviceAccount: "./Weedle-69d94723eed7.json",
-    databaseURL: "https://weedle-27e37.firebaseio.com",
-    databaseAuthVariableOverride: {
-        uid: "server_worker_1"
-    }
-});
-
-var db = firebase.database();
-//start the node server
-app.set('port', process.env.PORT || PORT);
-
-app.get('/' ,function (req,res) {
-    var clientIp = requestIp.getClientIp(req);
-    res.send('You shouldn\'t be here buddy. We\'ll hold on to your IP just in case ' + clientIp);
-});
-app.listen(app.get('port'),function(){
-    console.log('server started on port itzik '+ app.get('port'));
-});
-
-// get winner social image file
-app.post('/file_upload', upload.single('png'), function (req, res, next) {
-    console.log('image file received!');
-    var gameNum = req.body.gameNum;
-    var gameObj = getGameObj(parseInt(gameNum));
-    var uid = req.body.uid;
-    var imgFileName = req.file.filename;
-    /* if(imgFileName.includes(".png")){
-     imgFileName += ".png";
-     }*/
-    console.log('uid from file: '+ uid);
-    console.log('image name: '+ imgFileName);
-    postToFacebookPage(gameObj,imgFileName);
-});
 
 
+
+
+
+
+
+
+
+
+
+//TODO MAKE THIS WORK WITH QUEUE, USERS SHOULD NOT UPDATE USERS FOLDER
  var usersCallbackRef = db.ref("usersCallback");
  // Attach an asynchronous callback to read the data at our posts reference
 usersCallbackRef.on("value", function(snapshot) {
@@ -169,13 +185,15 @@ usersCallbackRef.on("value", function(snapshot) {
              updateUserWinnerDetails(uidKey, childData.facebookUser);
              removeUserCallback(uidKey,"facebookUser");
          } else if (childData.userAddress) {
-             //TODO SAVE WINNER ADDRESS
+             //TODO SAVE WINNER ADDRESS to users folders
              removeUserCallback(uidKey,"userAddress");
          }
      });
  }, function (errorObject) {
  console.log("userscallback read failed: " + errorObject.code);
  });
+
+
 
 
 
@@ -710,8 +728,6 @@ function updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis) {
         "score":gameScoreTask.score,
         "lastUpdateMillis":currentTimeMillis
     });
-    //TODO REMOVE TEST FROM HERE - PUT IT IN THE IRGHT PLACE INSTEAD
-    getMedianBarPercent(gameScoreTask.gameNum);
 }
 
 
