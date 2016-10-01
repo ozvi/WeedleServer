@@ -89,9 +89,9 @@ function addScoreToGameCount(gameNum, uid, score) {
         delete activeUsersObj.uid;
     }
     if(gameNum == 1){
-        game1ActiveUsersScores.uid = score;
+        game1ActiveUsersScores[uid] = score;
     }else if(gameNum == 2){
-        game2ActiveUsersScores.uid = score;
+        game2ActiveUsersScores[uid] = score;
     }
     console.log("Active users list updated - game "+gameNum);
     console.log(activeUsersObj);
