@@ -121,8 +121,11 @@ function postToFacebookPage(gameObj, imgName) {
     });
 }
 function removeUserFromActiveUsers(uid) {
+    console.log("User removed from active users "+uid);
+    console.log(game1ActiveUsersScores);
     delete game1ActiveUsersScores[uid];
     delete game2ActiveUsersScores[uid];
+    console.log(game1ActiveUsersScores);
 }
 
 function addScoreToGameCount(gameNum, uid, score) {
@@ -673,10 +676,10 @@ function adminGameReset(gameNum) {
 
 
 //queue workers
-var firebaseScoresQueueRef = db.ref('scoresQueue');
 var queueOptions = {
     'numWorkers': 1
 };
+var firebaseScoresQueueRef = db.ref('scoresQueue');
 var gameScoresQueue = new Queue(firebaseScoresQueueRef,queueOptions , function(gameScoreTask, progress, resolve, reject) {
     // Read and process task data
     verifyGameScore(gameScoreTask);
@@ -687,23 +690,23 @@ var gameScoresQueue = new Queue(firebaseScoresQueueRef,queueOptions , function(g
 
 //queue exit app
 var firebaseQuitQueueRef = db.ref('quitQueue');
-var gameScoresQueue = new Queue(firebaseQuitQueueRef,queueOptions , function(quitTask, progress, resolve, reject) {
+var quitQueue = new Queue(firebaseQuitQueueRef,queueOptions , function(quitTask, progress, resolve, reject) {
     // Read and process task data
-    console.log(quitTask);
-    removeUserFromActiveUsers(firebaseQuitQueueRef.uid);
+    removeUserFromActiveUsers(quitTask.uid);
     setTimeout(function() {
         resolve();
-    }, 0);
+    }, 1000);
 });
 
-//queue exit app
+//queue new user
 var firebaseUsersQueueRef = db.ref('usersQueue');
-var gameScoresQueue = new Queue(firebaseUsersQueueRef,queueOptions , function(newUserTask, progress, resolve, reject) {
+var newUserQueue = new Queue(firebaseUsersQueueRef,queueOptions , function(newUserTask, progress, resolve, reject) {
+    console.log(newUserTask);
     // Read and process task data
     addNewUser(newUserTask);
     setTimeout(function() {
         resolve();
-    }, 0);
+    }, 1000);
 });
 
 
@@ -779,9 +782,10 @@ function checkReallyWon(gameNum, gameScoreObj, uid) {
     }
 }
 function addNewUser(userObj) {
+    console.log("new user: " + userObj.uid);
     var usersRef = db.ref("users/"+userObj.uid);
-    usersRef.set({
-        "device_id":userObj.device_id
+    usersRef.update({
+        "deviceId":userObj.deviceId
     });
 }
 
