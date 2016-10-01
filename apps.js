@@ -30,7 +30,7 @@ facebookRequire.options({version: 'v2.4'});
 var options = facebookRequire.extend({appId: '1152404564834495', appSecret: '6fe1247db8011460545bd9dc39f81d63'});
 var facebook = new facebookRequire.Facebook(options);
 
-itzik();
+
 function itzik() {
     var path = __dirname + "/uploads/" + "db4657886c17526871e021577baaed62.png";
     var idString = "[{'tag_uid':'" + "1909476402613030" + "','x':0,'y':0}]";
@@ -156,7 +156,8 @@ app.post('/file_upload', upload.single('png'), function (req, res, next) {
     }
     console.log('uid from file: '+ uid);
     console.log('image name: '+ imgFileName);
-     postToFacebookPage(gameObj,imgFileName);
+     //postToFacebookPage(gameObj,imgFileName);
+    itzik();
 });
 
 
