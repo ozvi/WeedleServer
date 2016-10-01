@@ -39,6 +39,7 @@ function postToFacebookPage(gameObj, imgName) {
     console.log(idString);
     console.log(winnerObj);
     console.log(gameObj);
+    console.log(path);
    /* fs.stat(path, function (err, stats) {
         restler.post("https://graph.facebook.com/me/photos?access_token=" + FACEBOOK_TOKEN, {
             multipart: true,
