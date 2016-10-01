@@ -16,94 +16,93 @@ var request = require('request');
 var multer  = require('multer');
 var FormData = require('form-data'); //Pretty multipart form maker.
 var restler = require('restler');
-
-// var canvas  = require('canvas');
  var poster= require('poster');
 var upload = multer({ dest: 'uploads/' });
 var fs = require('fs');
 const PORT = 9450;
 const MAX_CLICK_SPEED_MILLIS = 55;
-const FACEBOOK_TOKEN = "EAAQYGxi5eL8BACcpWZBgcdVX1IQtT55OXUiPDiCybtLDpcnli4p9B5YBLAC4bILF6uZCzZAfU3ZAvvdLZCiqLD2BQ8SmIxsp1UAIOYSmQR6YCis6uKdQ4aj9yTYgr6JWd1kcsWV9ZAtPVtHvibhRiUAPQOr5TZAkXAZD";
+const MIN_FIRST_COMMIT_SCORE = 2000; // the max allowed first score queue request
 const MIN_ALLOWED_WINNER_SCORE_GAP = 1000;
+const FACEBOOK_POST_URL_PREFIX = "https://www.facebook.com/weedleApp/photos/";
+const FACEBOOK_TOKEN = "EAAQYGxi5eL8BACcpWZBgcdVX1IQtT55OXUiPDiCybtLDpcnli4p9B5YBLAC4bILF6uZCzZAfU3ZAvvdLZCiqLD2BQ8SmIxsp1UAIOYSmQR6YCis6uKdQ4aj9yTYgr6JWd1kcsWV9ZAtPVtHvibhRiUAPQOr5TZAkXAZD";
 var facebookRequire = require('fb');
 facebookRequire.options({version: 'v2.4'});
 var options = facebookRequire.extend({appId: '1152404564834495', appSecret: '6fe1247db8011460545bd9dc39f81d63'});
 var facebook = new facebookRequire.Facebook(options);
 
 
-/*function itzik() {
-    var path = __dirname + "/uploads/" + "db4657886c17526871e021577baaed62.png";
-    var idString = "[{'tag_uid':'" + "1909476402613030" + "','x':0,'y':0}]";
-    console.log(path);
-    /!* fs.stat(path, function (err, stats) {
-     restler.post("https://graph.facebook.com/me/photos?access_token=" + FACEBOOK_TOKEN, {
-     multipart: true,
-     data: {
-     "message": gameObj.facebookPostMsg,
-     "source": restler.file(path, null, stats.size, null, "image/png"),
-     "tags": idString
-     }
-     }).on("complete", function (data) {
-     console.log(data);
-     var ref = db.ref("itzik/pantsColor");
-     // Attach an asynchronous callback to read the data at our posts reference
-     ref.once("value", function (snapshot) {
-
-     }, function (errorObject) {
-     console.log("The read failed: " + errorObject.code);
-     })
 
 
-     });
-     });*!/
-    request.post(
-        {
-            url: "https://graph.facebook.com/me/photos?access_token=" + FACEBOOK_TOKEN,
-            formData: {
-                message: "hi20"
-                //source: fs.createReadStream(path)
-            }
-        }, function(err, res, body) {
-            var bodyJSON = JSON.parse(body);
-             if(bodyJSON.error) {
-             console.log(bodyJSON.error.message);
-             }
-        }
-    );
 
-}*/
+
+
+
+const STATUS_NO_STATUS = 0;
+const STATUS_GAME_RUNNING = 1;
+const STATUS_PENDING_WINNER = 2;
+const STATUS_NEW_GAME_DELAY = 3;
+const STATUS_COMMERCIAL_BREAK = 4;
+
+var gamePreset = {gameNum:0,pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[],
+    prizeImgUrl:"",currentGamePreset:0,gameSize:0,facebookPostMsg:""};
+var game1 = gamePreset;
+var game2 = gamePreset;
+var game1ActiveUsersScores = {};
+var game2ActiveUsersScores = {};
+
+
+
 function postToFacebookPage(gameObj, imgName) {
     var winnerObj = gameObj.winnerObj;
     var path = __dirname + "/uploads/" + imgName;
-    var idString = "[{'tag_uid':'" + winnerObj.facebookId.toString() + "','x':0,'y':0}]";
-    console.log(idString);
-    console.log(winnerObj);
-    console.log(gameObj);
-    console.log(path);
-
-
-     fs.stat(path, function (err, stats) {
-     restler.post("https://graph.facebook.com/me/photos?access_token=" + FACEBOOK_TOKEN, {
-     multipart: true,
-     data: {
-     "message": gameObj.facebookPostMsg,
-     "source": restler.file(path, null, stats.size, null, "image/png"),
-     "tags": idString
-     }
-     }).on("complete", function (data) {
-     console.log(data);
-         if(data.error.code)
-     var facebookPostIdRef = db.ref("game/game"+gameObj.gameNum+"/facebookPostId");
-     // Attach an asynchronous callback to read the data at our posts reference
-        // facebookPostIdRef.set();
-
-     });
-     });
+    var idArrayString = "[{'tag_uid':'" + winnerObj.facebookId.toString() + "','x':0,'y':0}]";
+    /*console.log(idString);
+     console.log(winnerObj);
+     console.log(gameObj);
+     console.log(path);*/
+    fs.stat(path, function (err, stats) {
+        restler.post("https://graph.facebook.com/me/photos?access_token=" + FACEBOOK_TOKEN, {
+            multipart: true,
+            data: {
+                "message": gameObj.facebookPostMsg,
+                "source": restler.file(path, null, stats.size, null, "image/png"),
+                "tags": idArrayString
+            }
+        }).on("complete", function (data) {
+            if(data.id) {
+                console.log("Facebook post success!");
+                console.log("Updating facebook post url to game "+gameObj.gameNum);
+                var facebookPostIdRef = db.ref("game/game" + gameObj.gameNum + "/facebookPostUrl");
+                // Attach an asynchronous callback to read the data at our posts reference
+                facebookPostIdRef.set(FACEBOOK_POST_URL_PREFIX + data.id);
+            }
+        });
+    });
 }
 
 
+function addScoreToGameCount(gameNum, uid, score) {
+    var activeUsersObj = getActiveUsersScoresObj(gameNum);
+    //TODO MIGHT NOT NEED THE IF, JS MIGHT DELETE IT FOR US
+    if (uid in activeUsersObj){
+        delete activeUsersObj.uid;
+    }
+    if(gameNum == 1){
+        game1ActiveUsersScores.uid = score;
+    }else if(gameNum == 2){
+        game2ActiveUsersScores.uid = score;
+    }
+    console.log("Active users list updated - game "+gameNum);
+    console.log(activeUsersObj);
+}
 
-
+function getActiveUsersScoresObj(gameNum) {
+    if(gameNum == 1){
+        return game1ActiveUsersScores;
+    }else if(gameNum == 2){
+        return game1ActiveUsersScores;
+    }
+}
 
 
 firebase.initializeApp({
@@ -133,27 +132,14 @@ app.post('/file_upload', upload.single('png'), function (req, res, next) {
     var gameObj = getGameObj(parseInt(gameNum));
     var uid = req.body.uid;
     var imgFileName = req.file.filename;
-   /* if(imgFileName.includes(".png")){
-        imgFileName += ".png";
-    }*/
+    /* if(imgFileName.includes(".png")){
+     imgFileName += ".png";
+     }*/
     console.log('uid from file: '+ uid);
     console.log('image name: '+ imgFileName);
-     postToFacebookPage(gameObj,imgFileName);
+    postToFacebookPage(gameObj,imgFileName);
 });
 
-
-
-
-const STATUS_NO_STATUS = 0;
-const STATUS_GAME_RUNNING = 1;
-const STATUS_PENDING_WINNER = 2;
-const STATUS_NEW_GAME_DELAY = 3;
-const STATUS_COMMERCIAL_BREAK = 4;
-
-var gamePreset = {gameNum:0,pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[],
-    prizeImgUrl:"",currentGamePreset:0,gameSize:0,facebookPostMsg:""};
-var game1 = gamePreset;
-var game2 = gamePreset;
 
  var usersCallbackRef = db.ref("usersCallback");
  // Attach an asynchronous callback to read the data at our posts reference
@@ -545,6 +531,7 @@ function pushNewGame(gameNum, gameStartTime){
             "prizeImgUrl": gameObj.prizeImgUrl,
             "prizeName": gameObj.prizeName,
             "pendingWinnerInfo": null,
+            "facebookPostUrl": null,
             "pendingWinnerUid": null,
             "newGameStarted": false,
             "startTimeMillis": gameStartTime+gameObj.secsDelay*1000,
@@ -661,7 +648,6 @@ function adminGameReset(gameNum) {
 
 
 //queue workers
-
 var firebaseQueueRef = db.ref('queue');
 var options = {
     'numWorkers': 1
@@ -698,13 +684,18 @@ function verifyGameScore(gameScoreTask) {
             }
         }
         catch(err) {
-            updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis);
+            //if null, this is the first commit
+            if(gameScoreTask.score < MIN_FIRST_COMMIT_SCORE)
+                updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis);
+            else
+                addToBlackList(gameScoreTask.uid);
         }
     }, function (errorObject) {
         console.log("The read failed: " + errorObject.code);
     });
 }
 function updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis) {
+    addScoreToGameCount(gameScoreTask.gameNum,gameScoreTask.uid,gameScoreTask.score)
     if(gameScoreTask.score == null) return;
         console.log("New game score: " + gameScoreTask.score);
     gameScoresRef.set({
