@@ -2,8 +2,13 @@
  * Created by zvi on 8/8/2016.
  */
 var express = require('express');
-
 var app = express();
+var bodyParser = require('body-parser')
+app.use( bodyParser.json() );       // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+    extended: true
+}));
+
 var requestIp = require('request-ip');
 var firebase = require('firebase');
 var Queue = require('firebase-queue');
@@ -26,7 +31,7 @@ var options = facebookRequire.extend({appId: '1152404564834495', appSecret: '6fe
 var facebook = new facebookRequire.Facebook(options);
 
 
-// postToFacebookPage(FACEBOOK_TOKEN,"hi1","test_image.png","100006520664660");
+
 function postToFacebookPage(access_token, winnerObj,message, imgName) {
     var path = __dirname + "/uploads/" + imgName;
     var idString = "[{'tag_uid':'" + winnerObj.facebookId + "','x':0,'y':0}]";
@@ -55,15 +60,7 @@ function postToFacebookPage(access_token, winnerObj,message, imgName) {
 }
 
 
-function dataURItoBlob(dataURI) {
-    var byteString = atob(dataURI.split(',')[1]);
-    var ab = new ArrayBuffer(byteString.length);
-    var ia = new Uint8Array(ab);
-    for (var i = 0; i < byteString.length; i++) {
-        ia[i] = byteString.charCodeAt(i);
-    }
-    return new Blob([ab], { type: 'image/png' });
-}
+
 
 
 
@@ -90,6 +87,11 @@ app.listen(app.get('port'),function(){
 // get winner social image file
 app.post('/file_upload', upload.single('png'), function (req, res, next) {
     console.log('image file received!');
+    var gameNum = req.body.gameNum;
+    var uid = req.body.uid;
+    var imgFile = req.file;
+    console.log('uid from file:'+ uid);
+    // postToFacebookPage(FACEBOOK_TOKEN,"hi1","test_image.png","100006520664660");
     //TODO NEED TO RENAME FILE BASED ON GAMENUM AND USER UID
 });
 
