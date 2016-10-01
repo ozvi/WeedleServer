@@ -1,7 +1,6 @@
 /**
  * Created by zvi on 8/8/2016.
  */
-//getMedianBarPercent(gameNum);
 var express = require('express');
 var app = express();
 var bodyParser = require('body-parser')
@@ -46,10 +45,12 @@ const STATUS_COMMERCIAL_BREAK = 4;
 
 var gamePreset = {gameNum:0,pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[],
     prizeImgUrl:"",currentGamePreset:0,gameSize:0,facebookPostMsg:""};
+var activeGames = [1,2];
 var game1 = gamePreset;
 var game2 = gamePreset;
 var game1ActiveUsersScores = {};
 var game2ActiveUsersScores = {};
+
 
 
 
@@ -150,22 +151,52 @@ function getActiveUsersScoresObj(gameNum) {
         return game1ActiveUsersScores;
     }
 }
-function getMedianBarPercent(gameNum) {
-    var activeUsersObj = getActiveUsersScoresObj(gameNum);
+function getMedianBarPercent() {
+    for(i = 0; i < activeGames.length; i++){
+    var gameNum = i+1;
+    var activeUsersObj = getActiveUsersScoresObj();
     var usersCount = Object.keys(activeUsersObj).length;
-    var scoreCount = 0;
-    for (var key in activeUsersObj) {
+
+        var sortsScores = [];
+        for (var user in activeUsersObj)
+            sortable.push([user, activeUsersObj[user]])
+        sortable.sort(
+            function(a, b) {
+                return a[1] - b[1]
+            }
+        )
+
+        var median = 0;
+        if(usersCount%2 != 0){
+            median = sortsScores[(usersCount+1)/2].uid;
+        }else{
+            var firstArg = sortsScores[usersCount/2].uid
+            var secArg = sortsScores[usersCount/2+1].uid;
+            median =  firstArg+secArg/2;
+        }
+        var percent = parseInt((median/getGameObj(gameNum).gameSize)*100);
+
+  /*  for (var key in activeUsersObj) {
         if (activeUsersObj.hasOwnProperty(key)) {
             scoreCount += activeUsersObj[key];
         }
-    }
-    var avrgScore = parseInt(scoreCount/usersCount);
-    var percent = parseInt((avrgScore/getGameObj(gameNum).gameSize)*100);
+    }*/
+
+/*    var avrgScore = parseInt(scoreCount/usersCount);
+    var percent = parseInt((avrgScore/getGameObj(gameNum).gameSize)*100);*/
     console.log("median percent: " + percent);
-    return percent;
+    var gameMedianRef =  db.ref("games/game"+gameNum+"/medianBarPercent");
+        gameMedianRef.set(percent);
+    }
 }
 
-
+function medianCalcInfinateLoop(interval) {
+    function go () {
+        getMedianBarPercent();
+        setTimeout(go,interval);
+    }
+    go();
+}
 
 
 
