@@ -108,8 +108,8 @@ function getMedianBarPercent(gameNum) {
     var activeUsersObj = getActiveUsersScoresObj(gameNum);
     var usersCount = Object.keys(activeUsersObj).length;
     var scoreCount = 0;
-    for (var key in p) {
-        if (p.hasOwnProperty(key)) {
+    for (var key in activeUsersObj) {
+        if (activeUsersObj.hasOwnProperty(key)) {
             scoreCount += p[key];
         }
     }
