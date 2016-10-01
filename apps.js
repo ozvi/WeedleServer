@@ -156,28 +156,31 @@ function getActiveUsersScoresObj(gameNum) {
 function pushNewMedianToGames() {
     for(i = 0; i < activeGames.length; i++){
     var gameNum = i+1;
-    var activeUsersObj = getActiveUsersScoresObj();
+    var activeUsersObj = getActiveUsersScoresObj(gameNum);
     var usersCount = Object.keys(activeUsersObj).length;
 
         var sortsScores = [];
         for (var user in activeUsersObj)
-            sortable.push([user, activeUsersObj[user]])
-        sortable.sort(
+            sortsScores.push([user, activeUsersObj[user]])
+        sortsScores.sort(
             function(a, b) {
                 return a[1] - b[1]
             }
         )
-
+    if(sortsScores.length == 0)return;
         var median = 0;
         if(usersCount%2 != 0){
-            median = sortsScores[(usersCount+1)/2].uid;
+            var scoreArray =  sortsScores[((usersCount+1)/2)-1];
+            console.log("arg " + scoreArray[1]);
+            median = scoreArray[1];
         }else{
-            var firstArg = sortsScores[usersCount/2].uid
-            var secArg = sortsScores[usersCount/2+1].uid;
-            median =  firstArg+secArg/2;
+            var firstArg = sortsScores[(usersCount/2)-1];
+            console.log("first arg " + firstArg[1]);
+            var secArg = sortsScores[usersCount/2];
+            median =  (firstArg[1]+secArg[1])/2;
         }
         var percent = parseInt((median/getGameObj(gameNum).gameSize)*100);
-
+        console.log("percent " + percent);
   /*  for (var key in activeUsersObj) {
         if (activeUsersObj.hasOwnProperty(key)) {
             scoreCount += activeUsersObj[key];
