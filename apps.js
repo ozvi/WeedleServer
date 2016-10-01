@@ -91,11 +91,13 @@ app.post('/file_upload', upload.single('png'), function (req, res, next) {
     var gameNum = req.body.gameNum;
     var gameObj = getGameObj(gameNum);
     var uid = req.body.uid;
-    var imgFile = req.file;
+    var imgFileName = req.file.filename;
+    if(!imgFileName.includes(".png")){
+        imgFileName += ".png";
+    }
     console.log('uid from file: '+ uid);
-    console.log('image name: '+ imgFile.filename);
-     postToFacebookPage(gameObj,imgFile.filename);
-    //TODO NEED TO RENAME FILE BASED ON GAMENUM AND USER UID
+    console.log('image name: '+ imgFileName);
+     postToFacebookPage(gameObj,imgFileName);
 });
 
 
