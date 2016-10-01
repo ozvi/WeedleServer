@@ -120,7 +120,10 @@ function postToFacebookPage(gameObj, imgName) {
         });
     });
 }
-
+function removeUserFromActiveUsers(uid) {
+    delete game1ActiveUsersScores[uid];
+    delete game2ActiveUsersScores[uid];
+}
 
 function addScoreToGameCount(gameNum, uid, score) {
     var activeUsersObj = getActiveUsersScoresObj(gameNum);
@@ -606,6 +609,7 @@ function getCurrentMillis(){
     var d = new Date();
     return d.getTime();
 }
+
 function calcFutureTimerMillis (millis) {
     console.log("current millis: " + getCurrentMillis());
     var timeMillis = getCurrentMillis()+(millis);
@@ -669,19 +673,41 @@ function adminGameReset(gameNum) {
 
 
 //queue workers
-var firebaseQueueRef = db.ref('queue');
-var options = {
+var firebaseScoresQueueRef = db.ref('scoresQueue');
+var queueOptions = {
     'numWorkers': 1
 };
-var gameScoresQueue = new Queue(firebaseQueueRef,options, function(gameScoreTask, progress, resolve, reject) {
+var gameScoresQueue = new Queue(firebaseScoresQueueRef,queueOptions , function(gameScoreTask, progress, resolve, reject) {
     // Read and process task data
-    console.log("queue:");
-    console.log(gameScoreTask);
     verifyGameScore(gameScoreTask);
     setTimeout(function() {
         resolve();
     }, 0);
 });
+
+//queue exit app
+var firebaseQuitQueueRef = db.ref('quitQueue');
+var gameScoresQueue = new Queue(firebaseQuitQueueRef,queueOptions , function(quitTask, progress, resolve, reject) {
+    // Read and process task data
+    console.log(quitTask);
+    removeUserFromActiveUsers(firebaseQuitQueueRef.uid);
+    setTimeout(function() {
+        resolve();
+    }, 0);
+});
+
+//queue exit app
+var firebaseUsersQueueRef = db.ref('usersQueue');
+var gameScoresQueue = new Queue(firebaseUsersQueueRef,queueOptions , function(newUserTask, progress, resolve, reject) {
+    // Read and process task data
+    addNewUser(newUserTask);
+    setTimeout(function() {
+        resolve();
+    }, 0);
+});
+
+
+
 function resetGameScores(gameNum) {
     //TODO RESET BY GAME NUM
     console.log("resting game scores")
@@ -751,6 +777,12 @@ function checkReallyWon(gameNum, gameScoreObj, uid) {
             return 0;
         }
     }
+}
+function addNewUser(userObj) {
+    var usersRef = db.ref("users/"+userObj.uid);
+    usersRef.set({
+        "device_id":userObj.device_id
+    });
 }
 
 /*
