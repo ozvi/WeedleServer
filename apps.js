@@ -23,7 +23,7 @@ var upload = multer({ dest: 'uploads/' });
 var fs = require('fs');
 const PORT = 9450;
 const MAX_CLICK_SPEED_MILLIS = 55;
-const FACEBOOK_TOKEN = "EAAQYGxi5eL8BAOGxW5Yl3VKU02joSo1wMaWonYGBrlSjMkwwXbUYZAduAZBR20rnnowBbT6Lt9ZCt3lzGB1GIcKw8XAgT2Lz1Xr9v6fYpelfmMo23r3G4QGjfZACb5jL8dFM56qktvHpNdQsQ9g0tl4A66SkZC66dKHBI2ntREAZDZD";
+const FACEBOOK_TOKEN = "EAAQYGxi5eL8BACcpWZBgcdVX1IQtT55OXUiPDiCybtLDpcnli4p9B5YBLAC4bILF6uZCzZAfU3ZAvvdLZCiqLD2BQ8SmIxsp1UAIOYSmQR6YCis6uKdQ4aj9yTYgr6JWd1kcsWV9ZAtPVtHvibhRiUAPQOr5TZAkXAZD";
 const MIN_ALLOWED_WINNER_SCORE_GAP = 1000;
 var facebookRequire = require('fb');
 facebookRequire.options({version: 'v2.4'});
@@ -81,20 +81,7 @@ function postToFacebookPage(gameObj, imgName) {
     console.log(gameObj);
     console.log(path);
 
-   /* request.post(
-        {
-            url: "https://graph.facebook.com/me/photos?access_token=" + FACEBOOK_TOKEN,
-            formData: {
-                message: winnerObj.firstName+" "+winnerObj.lastName+" "+gameObj.facebookPostMsg,
-                //source: fs.createReadStream(path)
-            }
-        }, function(err, res, body) {
-            var bodyJSON = JSON.parse(body);
-            if(bodyJSON.error) {
-                console.log(bodyJSON.error.message);
-            }
-        }
-    );*/
+
      fs.stat(path, function (err, stats) {
      restler.post("https://graph.facebook.com/me/photos?access_token=" + FACEBOOK_TOKEN, {
      multipart: true,
@@ -105,13 +92,10 @@ function postToFacebookPage(gameObj, imgName) {
      }
      }).on("complete", function (data) {
      console.log(data);
-     var ref = db.ref("itzik/pantsColor");
+         if(data.error.code)
+     var facebookPostIdRef = db.ref("game/game"+gameObj.gameNum+"/facebookPostId");
      // Attach an asynchronous callback to read the data at our posts reference
-     ref.once("value", function (snapshot) {
-
-     }, function (errorObject) {
-     console.log("The read failed: " + errorObject.code);
-     })
+        // facebookPostIdRef.set();
 
      });
      });
@@ -166,7 +150,8 @@ const STATUS_PENDING_WINNER = 2;
 const STATUS_NEW_GAME_DELAY = 3;
 const STATUS_COMMERCIAL_BREAK = 4;
 
-var gamePreset = {pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[],prizeImgUrl:"",currentGamePreset:0,gameSize:0,facebookPostMsg:""};
+var gamePreset = {gameNum:0,pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[],
+    prizeImgUrl:"",currentGamePreset:0,gameSize:0,facebookPostMsg:""};
 var game1 = gamePreset;
 var game2 = gamePreset;
 
@@ -582,11 +567,13 @@ function setLocalGameData(gameNum, gameObj) {
         game1.gameSize = gameObj.gameSize;
         game1.facebookTimerEndSeconds = gameObj.facebookTimerEndSeconds;
         game1.facebookPostMsg = gameObj.facebookPostMsg;
+        game1.gameNum = 1;
     }else  if(gameNum == 2){
         game2.prizeImgUrl = gameObj.prizeImgUrl;
         game2.gameSize = gameObj.gameSize;
         game2.facebookTimerEndSeconds = gameObj.facebookTimerEndSeconds;
         game2.facebookPostMsg = gameObj.facebookPostMsg;
+        game2.gameNum = 2;
     }
 }
 var newGameTimeout;
