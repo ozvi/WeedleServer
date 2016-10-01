@@ -37,7 +37,7 @@ function postToFacebookPage(gameObj, imgName) {
     var path = __dirname + "/uploads/" + imgName;
     var idString = "[{'tag_uid':'" + winnerObj.facebookId + "','x':0,'y':0}]";
     console.log(idString);
-    fs.stat(path, function (err, stats) {
+   /* fs.stat(path, function (err, stats) {
         restler.post("https://graph.facebook.com/me/photos?access_token=" + FACEBOOK_TOKEN, {
             multipart: true,
             data: {
@@ -57,12 +57,12 @@ function postToFacebookPage(gameObj, imgName) {
 
 
         });
-    });
-    /*request.post(
+    });*/
+    request.post(
         {
             url: "https://graph.facebook.com/me/photos?access_token=" + FACEBOOK_TOKEN,
             formData: {
-                message: gameObj.facebookPostMsg,
+                message: winnerObj.firstName+" "+winnerObj.lastName+" "+gameObj.facebookPostMsg,
                 source: fs.createReadStream(path)
             }
         }, function(err, res, body) {
@@ -71,7 +71,7 @@ function postToFacebookPage(gameObj, imgName) {
                 console.log(bodyJSON.error.message);
             }
         }
-    );*/
+    );
 
 }
 
