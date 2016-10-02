@@ -45,7 +45,7 @@ const STATUS_NEW_GAME_DELAY = 3;
 const STATUS_COMMERCIAL_BREAK = 4;
 
 var gamePreset = {gameNum:0,pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[],
-    prizeImgUrl:"",currentGamePreset:0,gameSize:0,facebookPostMsg:""};
+    prizeImgUrl:"",currentGamePreset:0,gameSize:0,facebookPostMsg:"",facebookPostLink:""};
 var activeGames = [1,2];
 var game1 = gamePreset;
 var game2 = gamePreset;
@@ -116,12 +116,23 @@ function postToFacebookPage(gameObj, imgName) {
             if(data.id) {
                 console.log("Facebook post success!");
                 console.log("Updating facebook post url to game "+gameObj.gameNum);
-                var facebookPostIdRef = db.ref("games/game" + gameObj.gameNum + "/facebookPostLink");
-                // Attach an asynchronous callback to read the data at our posts reference
-                facebookPostIdRef.set(FACEBOOK_POST_URL_PREFIX + data.id+"*"+data.post_id);
+                var facebookPostLink = FACEBOOK_POST_URL_PREFIX + data.id+"*"+data.post_id;
+                facebookPostIdRef.set(fbPostLinkWithId);
+                updateLocalGameObjWithFacebookLink(gameObj.gameNum,facebookPostLink);
+                publishWinnerDetails(gameObj.gameNum);
             }
         });
     });
+}
+function updateLocalGameObjWithFacebookLink(gameNum,fbPostLinkWithId) {
+        switch (gameNum){
+            case 1:
+                game1.winnerObj.fbPostLinkWithId = fbPostLinkWithId;
+                break;
+            case 2:
+                game2.winnerObj.fbPostLinkWithId = fbPostLinkWithId;
+                break;
+        }
 }
 function removeUserFromActiveUsers(uid) {
     console.log("User removed from active users "+uid);
@@ -133,9 +144,9 @@ function removeUserFromActiveUsers(uid) {
 function addScoreToGameCount(gameNum, uid, score) {
     var activeUsersObj = getActiveUsersScoresObj(gameNum);
     //TODO MIGHT NOT NEED THE IF, JS MIGHT DELETE IT FOR US
-    if (uid in activeUsersObj){
+/*    if (uid in activeUsersObj){
         delete activeUsersObj.uid;
-    }
+    }*/
     if(gameNum == 1){
         game1ActiveUsersScores[uid] = score;
     }else if(gameNum == 2){
@@ -149,7 +160,7 @@ function getActiveUsersScoresObj(gameNum) {
     if(gameNum == 1){
         return game1ActiveUsersScores;
     }else if(gameNum == 2){
-        return game1ActiveUsersScores;
+        return game2ActiveUsersScores;
     }
 }
 function pushNewMedianToGames() {
@@ -168,38 +179,27 @@ function pushNewMedianToGames() {
                 return a[1] - b[1]
             }
         )
-    if(sortsScores.length == 0)return;
-
+        var percent = 0;
+    if(sortsScores.length != 0){
         var median = 0;
         if(usersCount%2 != 0){
             var scoreArray =  sortsScores[((usersCount+1)/2)-1];
-            console.log("arg " + scoreArray[1]);
             median = scoreArray[1];
         }else{
             var firstArg = sortsScores[(usersCount/2)-1];
-            console.log("first arg " + firstArg[1]);
             var secArg = sortsScores[usersCount/2];
             median =  (firstArg[1]+secArg[1])/2;
         }
-        console.log("median " + median);
-        var percent = parseInt((median/gameObj.gameSize)*100);
-  /*  for (var key in activeUsersObj) {
-        if (activeUsersObj.hasOwnProperty(key)) {
-            scoreCount += activeUsersObj[key];
-        }
-    }*/
-
-/*    var avrgScore = parseInt(scoreCount/usersCount);
-    var percent = parseInt((avrgScore/getGameObj(gameNum).gameSize)*100);*/
-    console.log("median percent: " + percent);
-    var gameMedianRef =  db.ref("games/game"+gameNum+"/medianBarPercent");
+        percent = parseInt((median/gameObj.gameSize)*100);
+    }
+    console.log("Median percent for game"+gameNum+": " + percent);
+    var gameMedianRef =  db.ref("games/game"+gameNum+"vars/medianBarPercent");
         gameMedianRef.set(percent);
     }
 }
 
 function medianCalcInfinateLoop(interval) {
     function go () {
-        console.log("median calc");
         pushNewMedianToGames();
         setTimeout(go,interval);
     }
@@ -311,7 +311,7 @@ function isTempBlockedUser(uidKey, gameNum) {
 }
 function startFacebookLoginTimer(gameNum,uid) {
     console.log("starting facebook timer for game "+gameNum);
-    var gameRef = db.ref("games/game"+gameNum);
+    var gameRef = db.ref("games/game"+gameNum+"vars");
     var gameObj = (getGameObj(gameNum));
     console.log(gameObj);
     setTimeout(function(){
@@ -367,7 +367,7 @@ function calcAndNotifyWinnerHeWon(uid, gameNum) {
 function notifyWinnerHeWon(uid, gameNum, serverTimeStamp) {
     console.log("notify winner he won");
     var gameObj = getGameObj(gameNum);
-    var userFolderRef = db.ref("games/game" + gameNum + "/pendingWinnerInfo");
+    var userFolderRef = db.ref("games/game" + gameNum + "vars/pendingWinnerInfo");
     userFolderRef.set({
         pendingWinnerUid:uid,
         facebookTimerMillis:serverTimeStamp+gameObj.facebookTimerEndSeconds*1000
@@ -393,7 +393,7 @@ function addToBlackList(uid) {
 }
 function newPendingWinner(gameNum) {
     console.log("notify new pending winner");
-    var gameRef = db.ref("games/game"+gameNum);
+    var gameRef = db.ref("games/game"+gameNum+"vars");
     gameRef.update({
         "gameRunning": false,
         "pendingWinner": true
@@ -410,7 +410,6 @@ function updateGameStatus(gameNum, newGameStatus){
             game2.status = newGameStatus;
             break;
     }
-
 }
 function getGameObj(gameNum){
 
@@ -434,9 +433,6 @@ function onWinnerFacebookLogin(uid, winnerObj){
         return;
     }
     updateLocalGameObjNewWinner(gameNum,winnerObj);
-    publishWinnerDetails(gameNum,winnerObj);
-
-
    calcAndPushNewGame(gameNum)
 }
 function updateLocalGameObjNewWinner(gameNum,winnerObj) {
@@ -447,26 +443,28 @@ function updateLocalGameObjNewWinner(gameNum,winnerObj) {
     }
 }
 
-function publishWinnerDetails(gameNum, winnerObj) {
+function publishWinnerDetails(gameNum) {
     var gameObj = getGameObj(gameNum);
-
-    publishWinnerDetailsToGame(gameNum, winnerObj);
+    var winnerObj = gameObj.winnerObj;
+    publishWinnerDetailsToGame(gameObj, winnerObj);
     var billboardRef = db.ref("billboard");
     billboardRef.push().set({
         "firstName": winnerObj.firstName ,
         "lastName": winnerObj.lastName,
         "profileImgUrl": winnerObj.profileImgUrl,
         "prizeImgUrl": gameObj.prizeImgUrl,
+        "facebookPostLink": gameObj.facebookPostLink,
         "timestamp": getCurrentMillis()
     });
 }
 function publishWinnerDetailsToGame(gameNum, winnerObj) {
 
     console.log("publishing new winner details!");
-    var gameRef = db.ref("games/game"+gameNum+"/winner");
-    gameRef.update({
+    var gameRef = db.ref("games/game"+gameNum+"vars/winner");
+    gameRef.set({
         "firstName": winnerObj.firstName,
         "lastName":  winnerObj.lastName,
+        "facebookPostLink": winnerObj.facebookPostLink,
         "profileImgUrl": winnerObj.profileImgUrl
     });
 }
@@ -590,21 +588,24 @@ function pushNewGame(gameNum, gameStartTime){
         }
 
         var gameRef = db.ref("games/game"+gameNum);
+        var gameVarsRef = db.ref("games/game"+gameNum+"vars");
         gameRef.update({
             "backgroundUrl": gameObj.backgroundUrl,
-            "gameRunning": false,
             "gameSize": gameObj.gameSize,
             "prizeImgUrl": gameObj.prizeImgUrl,
             "prizeName": gameObj.prizeName,
+            "startTimeMillis": gameStartTime+gameObj.secsDelay*1000
+        });
+        gameVarsRef.update({
+            "gameRunning": false,
             "pendingWinnerInfo": null,
             "pendingWinnerUid": null,
             "newGameStarted": false,
-            "startTimeMillis": gameStartTime+gameObj.secsDelay*1000,
             "resetGameScores": true
         });
         setLocalGameData(gameNum, gameObj);
         //start timer for game start
-        startGameTimer(gameObj.secsDelay,gameRef);
+        startGameTimer(gameObj.secsDelay,gameVarsRef);
     }, function (errorObject) {
         console.log("The read failed: " + errorObject.code);
     });
@@ -628,19 +629,17 @@ function setLocalGameData(gameNum, gameObj) {
         game2.gameNum = 2;
     }
 }
-var newGameTimeout;
-function startGameTimer (seconds, gameRef) {
+var newGameTimeout; //global because in some cause will get stopped
+function startGameTimer (seconds, gameVarsRef) {
     console.log("timer start: " +seconds);
     newGameTimeout = setTimeout(function(){
-        gameRef.update({
+        gameVarsRef.update({
         "gameRunning": true,
         "pendingWinner": null,
         "newGameStarted": true,
-         "facebookPostLink": null,
         "winner": null,
         "medianBarPercent": 0,
         "resetGameScores": false
-
         })
         resetGameScores();
     }, seconds*1000);
@@ -694,7 +693,12 @@ function adminGameReset(gameNum) {
             console.log("firstWinnerState: " +firstWinner);
             if(firstWinner === true){
                 console.log("found first winner");
-                var winnerObj = {firstName:serverWinnerObj.firstName,lastName:serverWinnerObj.lastName,profileImgUrl:serverWinnerObj.profileImgUrl};
+                var winnerObj = {
+                    firstName:serverWinnerObj.firstName,
+                    lastName:serverWinnerObj.lastName,
+                    profileImgUrl:serverWinnerObj.profileImgUrl,
+                    facebookPostLink:serverWinnerObj.facebookPostLink
+                };
                 console.log(winnerObj);
                 publishWinnerDetailsToGame(gameNum,winnerObj);
                 firstWinner = false;
@@ -714,7 +718,7 @@ function adminGameReset(gameNum) {
 }
 
 
-//queue workers
+//queue options
 var queueOptions = {
     'numWorkers': 1
 };
@@ -770,19 +774,18 @@ function verifyGameScore(gameScoreTask) {
             console.log("timeGap: " + timeGap);
             console.log("speed: " + speed);
 
-            if(speed < MAX_CLICK_SPEED_MILLIS){
+            if(speed < MAX_CLICK_SPEED_MILLIS)
                 addToBlackList(gameScoreTask.uid);
-            }else{
-                updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis);
 
-            }
+            updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis);
+
         }
         catch(err) {
-            //if null, this is the first commit
-            if(gameScoreTask.score < MIN_FIRST_COMMIT_SCORE)
-                updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis);
-            else
+            //if null, this must be the first commit
+            if(gameScoreTask.score >= MIN_FIRST_COMMIT_SCORE)
                 addToBlackList(gameScoreTask.uid);
+            updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis);
+
         }
     }, function (errorObject) {
         console.log("The read failed: " + errorObject.code);
@@ -794,8 +797,14 @@ function updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis) {
         console.log("New game score: " + gameScoreTask.score);
     gameScoresRef.set({
         "score":gameScoreTask.score,
+        "fetch":false,
         "lastUpdateMillis":currentTimeMillis
     });
+    if(gameScoreTask.isBubble){
+        gameScoresRef.update({
+            "fetch":true
+        });
+    }
 }
 
 
