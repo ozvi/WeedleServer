@@ -446,7 +446,7 @@ function updateLocalGameObjNewWinner(gameNum,winnerObj) {
 function publishWinnerDetails(gameNum) {
     var gameObj = getGameObj(gameNum);
     var winnerObj = gameObj.winnerObj;
-    publishWinnerDetailsToGame(gameObj, winnerObj);
+    publishWinnerDetailsToGame(gameNum, winnerObj);
     var billboardRef = db.ref("billboard");
     billboardRef.push().set({
         "firstName": winnerObj.firstName ,
