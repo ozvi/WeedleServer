@@ -214,7 +214,6 @@ function medianCalcInfinateLoop(interval) {
 
 
 
-//TODO MAKE THIS WORK WITH QUEUE, USERS SHOULD NOT UPDATE USERS FOLDER
  var usersCallbackRef = db.ref("usersCallback");
  // Attach an asynchronous callback to read the data at our posts reference
 usersCallbackRef.on("value", function(snapshot) {
@@ -435,6 +434,8 @@ function onWinnerFacebookLogin(uid, winnerObj){
    calcAndPushNewGame(gameNum)
 }
 function updateLocalGameObjNewWinner(gameNum,winnerObj) {
+    console.log("winner obj");
+    console.log(winnerObj);
     if(gameNum == 1){
         game1.winnerObj = winnerObj;
     }else if(gameNum == 2){
