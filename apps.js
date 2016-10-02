@@ -271,8 +271,8 @@ function iWon(uid,gameNum) {
             var gameObj = getGameObj(gameNum);
             console.log("user callback i won notice");
             if(gameObj.status === STATUS_PENDING_WINNER){
-                console.log("adding qWinner: " + uidKey);
-                addToArray(gameObj.qWinners,uidKey);
+                console.log("adding qWinner: " + uid);
+                addToArray(gameObj.qWinners,uid);
                 return;
             }
             //user really won, now needs to login facebook
