@@ -199,6 +199,7 @@ function pushNewMedianToGames() {
 
 function medianCalcInfinateLoop(interval) {
     function go () {
+        console.log("median calc");
         pushNewMedianToGames();
         setTimeout(go,interval);
     }
