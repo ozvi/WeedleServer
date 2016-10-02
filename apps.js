@@ -760,6 +760,9 @@ function resetGameScores(gameNum) {
     gameScoresRef.set(null);
 }
 function verifyGameScore(gameScoreTask) {
+    var localGameObj = getGameObj(gameScoreTask.gameNum);
+    if(localGameObj.status != STATUS_GAME_RUNNING)
+        return;
     var gameScoresRef = db.ref("gameScores/game"+gameScoreTask.gameNum+"/"+gameScoreTask.uid);
     var currentTimeMillis = getCurrentMillis();
     gameScoresRef.once("value", function(snapshot) {
