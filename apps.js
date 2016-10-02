@@ -453,7 +453,7 @@ function publishWinnerDetails(gameNum) {
         "lastName": winnerObj.lastName,
         "profileImgUrl": winnerObj.profileImgUrl,
         "prizeImgUrl": gameObj.prizeImgUrl,
-        "facebookPostLink": gameObj.facebookPostLink,
+        "facebookPostLink": winnerObj.facebookPostLink,
         "timestamp": getCurrentMillis()
     });
 }
