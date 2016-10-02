@@ -123,13 +123,13 @@ function postToFacebookPage(gameObj, imgName) {
         });
     });
 }
-function updateLocalGameObjWithFacebookLink(gameNum,fbPostLinkWithId) {
+function updateLocalGameObjWithFacebookLink(gameNum,facebookPostLink) {
         switch (gameNum){
             case 1:
-                game1.winnerObj.fbPostLinkWithId = fbPostLinkWithId;
+                game1.winnerObj.facebookPostLink = facebookPostLink;
                 break;
             case 2:
-                game2.winnerObj.fbPostLinkWithId = fbPostLinkWithId;
+                game2.winnerObj.facebookPostLink = facebookPostLink;
                 break;
         }
 }
@@ -641,7 +641,6 @@ function startGameTimer (seconds, gameVarsRef) {
         "medianBarPercent": 0,
         "resetGameScores": false
         })
-        resetGameScores();
     }, seconds*1000);
 };
 
@@ -755,7 +754,6 @@ var newUserQueue = new Queue(firebaseUsersQueueRef,queueOptions , function(newUs
 
 
 function resetGameScores(gameNum) {
-    //TODO RESET BY GAME NUM
     console.log("resting game scores")
     var gameScoresRef = db.ref("gameScores/game"+gameNum);
     gameScoresRef.set(null);
