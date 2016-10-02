@@ -605,7 +605,7 @@ function pushNewGame(gameNum, gameStartTime){
         });
         setLocalGameData(gameNum, gameObj);
         //start timer for game start
-        startGameTimer(gameObj.secsDelay,gameVarsRef);
+        startGameTimer(gameObj.secsDelay,gameVarsRef,gameNum);
     }, function (errorObject) {
         console.log("The read failed: " + errorObject.code);
     });
@@ -630,7 +630,7 @@ function setLocalGameData(gameNum, gameObj) {
     }
 }
 var newGameTimeout; //global because in some cause will get stopped
-function startGameTimer (seconds, gameVarsRef) {
+function startGameTimer (seconds, gameVarsRef,gameNum) {
     console.log("timer start: " +seconds);
     newGameTimeout = setTimeout(function(){
         gameVarsRef.update({
@@ -641,6 +641,7 @@ function startGameTimer (seconds, gameVarsRef) {
         "medianBarPercent": 0,
         "resetGameScores": false
         })
+        resetGameScores(gameNum);
     }, seconds*1000);
 };
 
