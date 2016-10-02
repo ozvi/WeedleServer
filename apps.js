@@ -117,7 +117,6 @@ function postToFacebookPage(gameObj, imgName) {
                 console.log("Facebook post success!");
                 console.log("Updating facebook post url to game "+gameObj.gameNum);
                 var facebookPostLink = FACEBOOK_POST_URL_PREFIX + data.id+"*"+data.post_id;
-                facebookPostIdRef.set(fbPostLinkWithId);
                 updateLocalGameObjWithFacebookLink(gameObj.gameNum,facebookPostLink);
                 publishWinnerDetails(gameObj.gameNum);
             }
