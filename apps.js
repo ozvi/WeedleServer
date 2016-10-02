@@ -21,7 +21,7 @@ var upload = multer({ dest: 'uploads/' });
 var fs = require('fs');
 const PORT = 9450;
 const MEDIAN_BAR_INTERVAL = 1000*10;
-const MAX_CLICK_SPEED_MILLIS = 55;
+const MAX_CLICK_SPEED_MILLIS = 30;
 const MIN_FIRST_COMMIT_SCORE = 2000; // the max allowed first score queue request
 const MIN_ALLOWED_WINNER_SCORE_GAP = 1000;
 const FACEBOOK_POST_URL_PREFIX = "https://www.facebook.com/weedleApp/photos/";
@@ -125,7 +125,6 @@ function postToFacebookPage(gameObj, imgName) {
 }
 function removeUserFromActiveUsers(uid) {
     console.log("User removed from active users "+uid);
-    console.log(game1ActiveUsersScores);
     delete game1ActiveUsersScores[uid];
     delete game2ActiveUsersScores[uid];
     console.log(game1ActiveUsersScores);
