@@ -162,7 +162,8 @@ function pushNewMedianToGames() {
     for(i = 0; i < activeGames.length; i++){
         var gameNum = i+1;
         var gameObj = getGameObj(gameNum);
-        if(gameObj.gameSize == 0)return;
+
+        if(gameObj.gameSize == null || gameObj.gameSize == 0)return;
         var activeUsersObj = getActiveUsersScoresObj(gameNum);
         var usersCount = Object.keys(activeUsersObj).length;
 
