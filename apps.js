@@ -642,7 +642,7 @@ function setLocalGameData(gameNum, gameObj) {
 }
 var newGameTimeout; //global because in some cause will get stopped
 function startGameTimer (gameObj, gameVarsRef,gameNum) {
-    console.log("timer start: " +seconds);
+    console.log("timer start: " +gameObj.secsDelay);
     newGameTimeout = setTimeout(function(){
         gameVarsRef.update({
         "gameRunning": true,
