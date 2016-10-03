@@ -582,7 +582,7 @@ function pushNewGame(gameNum, gameStartTime){
     if(newGameTimeout != null){
         clearTimeout(newGameTimeout);
     }
-    resetLocalGame(gameNum);
+    resetGameScores(gameNum);
     incrementCurrentGamePreset(gameNum);
     console.log("itzik44");
     var localGameObj = getGameObj(gameNum);
@@ -653,7 +653,7 @@ function startGameTimer (seconds, gameVarsRef,gameNum) {
         "resetGameScores": false
         })
         resetGameScores(gameNum);
-        resetGameScores(gameNum);
+        resetLocalGame(gameNum);
         updateGameStatus(gameNum, STATUS_GAME_RUNNING);
     }, seconds*1000);
 };
