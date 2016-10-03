@@ -44,7 +44,7 @@ const STATUS_PENDING_WINNER = 2;
 const STATUS_NEW_GAME_DELAY = 3;
 const STATUS_COMMERCIAL_BREAK = 4;
 
-var gamePreset = {gameNum:0,pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[],
+const gamePreset = {gameNum:0,pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[],
     prizeImgUrl:"",currentGamePreset:0,gameSize:0,facebookPostMsg:"",facebookPostLink:""};
 var activeGames = [1,2];
 var game1 = gamePreset;
@@ -529,6 +529,7 @@ function resetGame(gameNum){
         game1 = gamePreset;
         game1ActiveUsersScores = {};
         console.log("local game"+gameNum+" obj restarted");
+        console.log(game1);
     }else if(gameNum == 2){
         game2 = gamePreset;
         game2ActiveUsersScores = {};
