@@ -224,8 +224,9 @@ usersCallbackRef.on("value", function(snapshot) {
              iWon(uidKey,childData.iWon);
          } else if (childData.facebookUser) {
              console.log("user callback new facebook account");
+             //TODO CHECK IF THE USER IS A WINNER OR JUST A REGULAR FACEBOOK LOGIN
              onWinnerFacebookLogin(uidKey, childData.facebookUser);
-             updateUserWinnerDetails(uidKey, childData.facebookUser);
+             updateUserFacebookDetails(uidKey, childData.facebookUser);
              removeUserCallback(uidKey,"facebookUser");
          } else if (childData.userAddress) {
              //TODO SAVE WINNER ADDRESS to users folders
@@ -470,7 +471,7 @@ function publishWinnerDetailsToGame(gameNum, winnerObj) {
 }
 
 
-function updateUserWinnerDetails(uid, winnerObj) {
+function updateUserFacebookDetails(uid, winnerObj) {
     console.log("updating winner details");
     var userFolderRef = db.ref("users/"+uid);
     userFolderRef.update({
@@ -573,7 +574,6 @@ function pushNewGame(gameNum, gameStartTime){
     }
     resetGameScores(gameNum);
     incrementCurrentGamePreset(gameNum);
-    updateGameStatus(gameNum, STATUS_GAME_RUNNING);
     resetGame(gameNum);
     var localGameObj = getGameObj(gameNum);
     var gamesPresetsRef = db.ref("gamePresets/game"+gameNum+"/"+localGameObj.currentGamePreset);
@@ -642,6 +642,7 @@ function startGameTimer (seconds, gameVarsRef,gameNum) {
         "resetGameScores": false
         })
         resetGameScores(gameNum);
+        updateGameStatus(gameNum, STATUS_GAME_RUNNING);
     }, seconds*1000);
 };
 
