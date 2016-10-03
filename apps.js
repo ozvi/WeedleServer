@@ -44,11 +44,11 @@ const STATUS_PENDING_WINNER = 2;
 const STATUS_NEW_GAME_DELAY = 3;
 const STATUS_COMMERCIAL_BREAK = 4;
 
-const gamePreset = {gameNum:0,pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[],
-    prizeImgUrl:"",currentGamePreset:0,gameSize:0,facebookPostMsg:"",facebookPostLink:""};
+/*const gamePreset = {gameNum:0,pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[],
+    prizeImgUrl:"",currentGamePreset:0,gameSize:0,facebookPostMsg:"",facebookPostLink:""};*/
 var activeGames = [1,2];
-var game1 = gamePreset;
-var game2 = gamePreset;
+var game1 = {};
+var game2 = {};
 var game1ActiveUsersScores = {};
 var game2ActiveUsersScores = {};
 
@@ -297,6 +297,7 @@ function iWon(uid,gameNum) {
 
 function isTempBlockedUser(uidKey, gameNum) {
     var gameObj = getGameObj(gameNum);
+    if(gameObj.blackList == null)return;
     for(var i = 0; i < gameObj.blackList.length; i++){
         if(gameObj.blackList[i] === uidKey){
             return true;
@@ -326,6 +327,7 @@ function startFacebookLoginTimer(gameNum,uid) {
 function addUserToTempBlackList(uid,gameNum) {
     console.log("adding "+uid+" to temp black list");
     var gameObj = (getGameObj(gameNum));
+    gameObj.blackList = [];
     addToArray(gameObj.blackList,uid);
 }
 
@@ -406,7 +408,6 @@ function updateGameStatus(gameNum, newGameStatus){
     }
 }
 function getGameObj(gameNum){
-
     switch (gameNum){
         case 1:
             return game1;
@@ -526,13 +527,12 @@ function getWinnerGameNum(uid) {
 function resetGame(gameNum){
 
     if(gameNum == 1){
-        game1 = null;
-        game1 = gamePreset;
+        game1 = {};
         game1ActiveUsersScores = {};
         console.log("local game"+gameNum+" obj restarted");
         console.log(game1);
     }else if(gameNum == 2){
-        game2 = gamePreset;
+        game2 = {};
         game2ActiveUsersScores = {};
     }
 
@@ -555,8 +555,15 @@ function calcAndPushNewGame (gameNum) {
 }
 function incrementCurrentGamePreset(gameNum) {
     if(gameNum == 1){
+        if(game1.currentGamePreset == null){
+            game1.currentGamePreset = 0;
+            console.log("gameObj"+gameNum);
+            console.log(game1);
+        }
         game1.currentGamePreset = game1.currentGamePreset+1;
     }else if(gameNum == 2){
+        if(game2.currentGamePreset == null)
+            game2.currentGamePreset = 0;
         game2.currentGamePreset = game2.currentGamePreset+1;
     }
 }
@@ -572,10 +579,12 @@ function pushNewGame(gameNum, gameStartTime){
     if(newGameTimeout != null){
         clearTimeout(newGameTimeout);
     }
+    resetGame(gameNum);
     resetGameScores(gameNum);
     incrementCurrentGamePreset(gameNum);
-    resetGame(gameNum);
+    console.log("itzik44");
     var localGameObj = getGameObj(gameNum);
+    console.log(localGameObj);
     var gamesPresetsRef = db.ref("gamePresets/game"+gameNum+"/"+localGameObj.currentGamePreset);
     // Attach an asynchronous callback to read the data at our posts reference
     console.log("loading game preset number "+localGameObj.currentGamePreset);
