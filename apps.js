@@ -142,10 +142,6 @@ function removeUserFromActiveUsers(uid) {
 
 function addScoreToGameCount(gameNum, uid, score) {
     var activeUsersObj = getActiveUsersScoresObj(gameNum);
-    //TODO MIGHT NOT NEED THE IF, JS MIGHT DELETE IT FOR US
-/*    if (uid in activeUsersObj){
-        delete activeUsersObj.uid;
-    }*/
     if(gameNum == 1){
         game1ActiveUsersScores[uid] = score;
     }else if(gameNum == 2){
@@ -330,7 +326,6 @@ function startFacebookLoginTimer(gameNum,uid) {
 function addUserToTempBlackList(uid,gameNum) {
     console.log("adding "+uid+" to temp black list");
     var gameObj = (getGameObj(gameNum));
-    //TODO MAKE SURE THIS WORKS
     addToArray(gameObj.blackList,uid);
 }
 
