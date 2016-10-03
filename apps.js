@@ -526,6 +526,7 @@ function getWinnerGameNum(uid) {
 function resetGame(gameNum){
 
     if(gameNum == 1){
+        game1 = null;
         game1 = gamePreset;
         game1ActiveUsersScores = {};
         console.log("local game"+gameNum+" obj restarted");
