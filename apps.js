@@ -531,12 +531,16 @@ function getWinnerGameNum(uid) {
 function resetLocalGame(gameNum){
 
     if(gameNum == 1){
+        var gamePreset = game1.currentGamePreset;
         game1 = {};
+        game1.currentGamePreset = gamePreset;
         game1ActiveUsersScores = {};
         console.log("local game"+gameNum+" obj restarted");
         console.log(game1);
     }else if(gameNum == 2){
+        var gamePreset = game2.currentGamePreset;
         game2 = {};
+        game2.currentGamePreset = gamePreset;
         game2ActiveUsersScores = {};
     }
 
