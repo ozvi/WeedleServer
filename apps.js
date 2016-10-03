@@ -433,9 +433,12 @@ function onWinnerFacebookLogin(uid, winnerObj){
 function updateLocalGameObjNewWinner(gameNum,winnerObj) {
     console.log("winner obj");
     console.log(winnerObj);
+
     if(gameNum == 1){
+        game1.winnerObj = {};
         game1.winnerObj = winnerObj;
     }else if(gameNum == 2){
+        game2.winnerObj = {};
         game2.winnerObj = winnerObj;
     }
 }
