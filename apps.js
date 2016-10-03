@@ -615,7 +615,6 @@ function pushNewGame(gameNum, gameStartTime){
             "newGameStarted": false,
             "resetGameScores": true
         });
-        setLocalGameData(gameNum, gameObj);
         //start timer for game start
         startGameTimer(gameObj.secsDelay,gameVarsRef,gameNum);
     }, function (errorObject) {
@@ -655,6 +654,7 @@ function startGameTimer (seconds, gameVarsRef,gameNum) {
         })
         resetGameScores(gameNum);
         resetLocalGame(gameNum);
+        setLocalGameData(gameNum, gameObj);
         updateGameStatus(gameNum, STATUS_GAME_RUNNING);
     }, seconds*1000);
 };
@@ -828,7 +828,8 @@ function updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis) {
 
 function checkReallyWon(gameNum, gameScoreObj, uid) {
     console.log("game"+ gameNum+" score object:");
-    var scoreGap = gameScoreObj.score - getGameObj(gameNum).gameSize;
+    var gameObj =  getGameObj(gameNum);
+    var scoreGap = gameScoreObj.score - gameObj.gameSize;
     console.log("Score gap: " + scoreGap);
     if(scoreGap == 0){
         return gameNum;
