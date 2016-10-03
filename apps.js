@@ -435,11 +435,11 @@ function updateLocalGameObjNewWinner(gameNum,winnerObj) {
     console.log(winnerObj);
 
     if(gameNum == 1){
-        game1.winnerObj = {};
-        game1.winnerObj = winnerObj;
+        // game1.winnerObj = {};
+        game1[winnerObj] = winnerObj;
     }else if(gameNum == 2){
-        game2.winnerObj = {};
-        game2.winnerObj = winnerObj;
+        // game2.winnerObj = {};
+        game2.[winnerObj] = winnerObj;
     }
 }
 
