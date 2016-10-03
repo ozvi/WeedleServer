@@ -435,11 +435,11 @@ function updateLocalGameObjNewWinner(gameNum,winnerObj) {
     console.log(winnerObj);
 
     if(gameNum == 1){
-        // game1.winnerObj = {};
-        game1[winnerObj] = winnerObj;
+        game1.winnerObj = {};
+        game1.winnerObj = winnerObj;
     }else if(gameNum == 2){
-        // game2.winnerObj = {};
-        game2[winnerObj] = winnerObj;
+        game2.winnerObj = {};
+        game2.winnerObj = winnerObj;
     }
 }
 
@@ -527,7 +527,7 @@ function getWinnerGameNum(uid) {
 
 
 
-function resetGame(gameNum){
+function resetLocalGame(gameNum){
 
     if(gameNum == 1){
         game1 = {};
@@ -582,8 +582,7 @@ function pushNewGame(gameNum, gameStartTime){
     if(newGameTimeout != null){
         clearTimeout(newGameTimeout);
     }
-    resetGame(gameNum);
-    resetGameScores(gameNum);
+    resetLocalGame(gameNum);
     incrementCurrentGamePreset(gameNum);
     console.log("itzik44");
     var localGameObj = getGameObj(gameNum);
@@ -653,6 +652,7 @@ function startGameTimer (seconds, gameVarsRef,gameNum) {
         "medianBarPercent": 0,
         "resetGameScores": false
         })
+        resetGameScores(gameNum);
         resetGameScores(gameNum);
         updateGameStatus(gameNum, STATUS_GAME_RUNNING);
     }, seconds*1000);
