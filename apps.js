@@ -439,7 +439,7 @@ function updateLocalGameObjNewWinner(gameNum,winnerObj) {
         game1[winnerObj] = winnerObj;
     }else if(gameNum == 2){
         // game2.winnerObj = {};
-        game2.[winnerObj] = winnerObj;
+        game2[winnerObj] = winnerObj;
     }
 }
 
