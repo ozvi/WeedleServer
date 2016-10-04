@@ -328,7 +328,6 @@ function startFacebookLoginTimer(gameNum,uid) {
 function addUserToTempBlackList(uid,gameNum) {
     console.log("adding "+uid+" to temp black list");
     var gameObj = (getGameObj(gameNum));
-    gameObj.blackList = [];
     addToArray(gameObj.blackList,uid);
 }
 
@@ -528,7 +527,7 @@ function getWinnerGameNum(uid) {
 
 
 
-function resetLocalGame(gameNum){
+function resetLocalGame(gameNum, gameObj){
 
     if(gameNum == 1){
         var gamePreset = game1.currentGamePreset;
@@ -543,7 +542,7 @@ function resetLocalGame(gameNum){
         game2.currentGamePreset = gamePreset;
         game2ActiveUsersScores = {};
     }
-
+    setLocalGameData(gameNum, gameObj);
 }
 
 function calcAndPushNewGame (gameNum) {
@@ -633,12 +632,14 @@ function setLocalGameData(gameNum, gameObj) {
     if(gameNum == 1){
         game1.prizeImgUrl = gameObj.prizeImgUrl;
         game1.gameSize = gameObj.gameSize;
+        gameObj.blackList = [];
         game1.facebookTimerEndSeconds = gameObj.facebookTimerEndSeconds;
         game1.facebookPostMsg = gameObj.facebookPostMsg;
         game1.gameNum = 1;
     }else  if(gameNum == 2){
         game2.prizeImgUrl = gameObj.prizeImgUrl;
         game2.gameSize = gameObj.gameSize;
+        gameObj.blackList = [];
         game2.facebookTimerEndSeconds = gameObj.facebookTimerEndSeconds;
         game2.facebookPostMsg = gameObj.facebookPostMsg;
         game2.gameNum = 2;
@@ -657,8 +658,8 @@ function startGameTimer (gameObj, gameVarsRef,gameNum) {
         "resetGameScores": false
         })
         resetGameScores(gameNum);
-        resetLocalGame(gameNum);
-        setLocalGameData(gameNum, gameObj);
+        resetLocalGame(gameNum, gameObj);
+
         updateGameStatus(gameNum, STATUS_GAME_RUNNING);
     }, gameObj.secsDelay*1000);
 };
