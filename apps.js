@@ -298,7 +298,6 @@ function iWon(uid,gameNum) {
 
 function isTempBlockedUser(uidKey, gameNum) {
     var gameObj = getGameObj(gameNum);
-    if(gameObj.blackList == null)return;
     for(var i = 0; i < gameObj.blackList.length; i++){
         if(gameObj.blackList[i] === uidKey){
             return true;
@@ -632,14 +631,14 @@ function setLocalGameData(gameNum, gameObj) {
     if(gameNum == 1){
         game1.prizeImgUrl = gameObj.prizeImgUrl;
         game1.gameSize = gameObj.gameSize;
-        gameObj.blackList = [];
+        game1.blackList = [];
         game1.facebookTimerEndSeconds = gameObj.facebookTimerEndSeconds;
         game1.facebookPostMsg = gameObj.facebookPostMsg;
         game1.gameNum = 1;
     }else  if(gameNum == 2){
         game2.prizeImgUrl = gameObj.prizeImgUrl;
         game2.gameSize = gameObj.gameSize;
-        gameObj.blackList = [];
+        game2.blackList = [];
         game2.facebookTimerEndSeconds = gameObj.facebookTimerEndSeconds;
         game2.facebookPostMsg = gameObj.facebookPostMsg;
         game2.gameNum = 2;
@@ -659,7 +658,6 @@ function startGameTimer (gameObj, gameVarsRef,gameNum) {
         })
         resetGameScores(gameNum);
         resetLocalGame(gameNum, gameObj);
-
         updateGameStatus(gameNum, STATUS_GAME_RUNNING);
     }, gameObj.secsDelay*1000);
 };
