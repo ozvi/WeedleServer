@@ -116,7 +116,7 @@ app.listen(app.get('port'),function(){
 });
 
 // get winner social image file
-app.post('/file_upload', upload.single('file'), function (req, res, next) {
+app.post('/file_upload', upload.single('png'), function (req, res, next) {
     console.log('image file received!');
     var gameNum = req.body.gameNum;
     console.log('image upload for game num'+gameNum);
