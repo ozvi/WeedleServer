@@ -44,6 +44,10 @@ const STATUS_PENDING_WINNER = 2;
 const STATUS_NEW_GAME_DELAY = 3;
 const STATUS_COMMERCIAL_BREAK = 4;
 
+//TODO REPLACE WITH REAL ONE
+// const WINNER_TIMEOUT_MILLIS = (1000*60*60)*23;
+const WINNER_TIMEOUT_MILLIS = 1000*60*2;
+
 /*const gamePreset = {gameNum:0,pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[],
     prizeImgUrl:"",currentGamePreset:0,gameSize:0,facebookPostMsg:"",facebookPostLink:""};*/
 var activeGames = [1,2];
@@ -51,8 +55,31 @@ var game1 = {};
 var game2 = {};
 var game1ActiveUsersScores = {};
 var game2ActiveUsersScores = {};
+var timedoutWinners= {};
 
-
+function validateTimeoutWinnersList() {
+    var currentTimeMillis = getCurrentMillis();
+    console.log('winner timeout list before:');
+    console.log(timedoutWinners);
+    for (var k in target){
+        if (typeof target[k] !== 'function') {
+            alert("Key is " + k + ", value is" + target[k]);
+        }
+    }
+    for (var winnerUid in timedoutWinners){
+        if (typeof timedoutWinners[winnerUid] !== 'function') {
+            if (currentTimeMillis >= timedoutWinners[winnerUid]) {
+                console.log('winner deleted  - '+winnerUid);
+                delete timedoutWinners[winnerUid];
+            }
+        }
+    }
+    console.log('winner timeout list after:');
+    console.log(timedoutWinners);
+}
+function addTimeoutWinner(uid) {
+    timedoutWinners[uid] = getCurrentMillis()+WINNER_TIMEOUT_MILLIS;
+}
 
 
 
@@ -197,6 +224,7 @@ function pushNewMedianToGames() {
 function medianCalcInfinateLoop(interval) {
     function go () {
         pushNewMedianToGames();
+        validateTimeoutWinnersList();
         setTimeout(go,interval);
     }
     go();
@@ -284,6 +312,7 @@ function iWon(uid,gameNum) {
             newPendingWinner(gameNum);
             calcAndNotifyWinnerHeWon(uid, gameNum);
             startFacebookLoginTimer(gameNum,uid);
+            addTimeoutWinner(uid);
             console.log("new pending winner for game "+gameNum);
         }, function (errorObject) {
             console.log("The read failed: " + errorObject.code);
