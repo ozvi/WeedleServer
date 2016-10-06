@@ -55,25 +55,38 @@ var game1 = {};
 var game2 = {};
 var game1ActiveUsersScores = {};
 var game2ActiveUsersScores = {};
-var timedoutWinners= {};
+var timeoutWinners= {};
 
 function validateTimeoutWinnersList() {
     var currentTimeMillis = getCurrentMillis();
     console.log('winner timeout list before:');
-    console.log(timedoutWinners);
-    for (var winnerUid in timedoutWinners){
-        if (typeof timedoutWinners[winnerUid] !== 'function') {
-            if (currentTimeMillis >= timedoutWinners[winnerUid]) {
+    console.log(timeoutWinners);
+    for (var winnerUid in timeoutWinners){
+        if (typeof timeoutWinners[winnerUid] !== 'function') {
+            if (currentTimeMillis >= timeoutWinners[winnerUid]) {
                 console.log('winner deleted  - '+winnerUid);
-                delete timedoutWinners[winnerUid];
+                delete timeoutWinners[winnerUid];
             }
         }
     }
     console.log('winner timeout list after:');
-    console.log(timedoutWinners);
+    console.log(timeoutWinners);
 }
 function addTimeoutWinner(uid) {
-    timedoutWinners[uid] = getCurrentMillis()+WINNER_TIMEOUT_MILLIS;
+    var timeStampRef = db.ref("timeStamp");
+    timeStampRef.set(firebase.database.ServerValue.TIMESTAMP,function(error) {
+        if (error) {
+            console.log('Synchronization failed');
+        } else {
+            timeStampRef.once("value", function(snapshot) {
+                timeoutWinners[uid] = snapshot.val()+WINNER_TIMEOUT_MILLIS;
+                var userRef =  db.ref("users/"+uid+"/winnerTimeout");
+                userRef.set(snapshot.val() + WINNER_TIMEOUT_MILLIS);
+            }, function (errorObject) {
+                console.log("The read failed: " + errorObject.code);
+            });
+        }
+    });
 }
 
 
@@ -104,6 +117,7 @@ app.listen(app.get('port'),function(){
 app.post('/file_upload', upload.single('png'), function (req, res, next) {
     console.log('image file received!');
     var gameNum = req.body.gameNum;
+    console.log('image upload for game num'+gameNum);
     var gameObj = getGameObj(parseInt(gameNum));
     var uid = req.body.uid;
     var imgFileName = req.file.filename;
@@ -281,9 +295,14 @@ function iWon(uid,gameNum) {
         var userGameScoresRef = db.ref("gameScores/game"+gameNum+"/"+uid);
         userGameScoresRef.once("value", function(snapshot) {
             var gameScoreObj = snapshot.val();
-            console.log("winner game score: "+gameScoreObj.score);
-            gameNum = checkReallyWon(gameNum,gameScoreObj,uid);
-            console.log("winner found for game " + gameNum);
+            if(gameScoreObj != null){
+                console.log("winner game score: "+gameScoreObj.score);
+                gameNum = checkReallyWon(gameNum,gameScoreObj,uid);
+                console.log("winner found for game " + gameNum);
+            }else{
+                gameNum = 0;
+            }
+
             if (gameNum == 0) {
                 addToBlackList(uid);
                 removeUserCallback(uid,"iWon");
