@@ -61,11 +61,6 @@ function validateTimeoutWinnersList() {
     var currentTimeMillis = getCurrentMillis();
     console.log('winner timeout list before:');
     console.log(timedoutWinners);
-    for (var k in target){
-        if (typeof target[k] !== 'function') {
-            alert("Key is " + k + ", value is" + target[k]);
-        }
-    }
     for (var winnerUid in timedoutWinners){
         if (typeof timedoutWinners[winnerUid] !== 'function') {
             if (currentTimeMillis >= timedoutWinners[winnerUid]) {
