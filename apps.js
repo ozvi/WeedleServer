@@ -41,12 +41,18 @@ var facebook = new facebookRequire.Facebook(options);
 const STATUS_NO_STATUS = 0;
 const STATUS_GAME_RUNNING = 1;
 const STATUS_PENDING_WINNER = 2;
-const STATUS_NEW_GAME_DELAY = 3;
-const STATUS_COMMERCIAL_BREAK = 4;
+const STATUS_WINNER_LOGGED_IN = 3;
+const STATUS_NEW_GAME_TIMER = 4;
+const STATUS_COMMERCIAL_BREAK = 5;
 
 //TODO REPLACE WITH REAL ONE
 // const WINNER_TIMEOUT_MILLIS = (1000*60*60)*23;
 const WINNER_TIMEOUT_MILLIS = 1000*60*2;
+
+
+
+const PNG_RECEIVE_TIMEOUT_MILLIS = 1000*10;
+
 
 /*const gamePreset = {gameNum:0,pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[],
     prizeImgUrl:"",currentGamePreset:0,gameSize:0,facebookPostMsg:"",facebookPostLink:""};*/
@@ -123,15 +129,53 @@ app.post('/file_upload', upload.single('png'), function (req, res, next) {
     var gameObj = getGameObj(parseInt(gameNum));
     var uid = req.body.uid;
     var imgFileName = req.file.filename;
-    /* if(imgFileName.includes(".png")){
-     imgFileName += ".png";
-     }*/
     console.log('uid from file: '+ uid);
     console.log('image name: '+ imgFileName);
+    if(uid == null || req.file == null || gameNum  == null) {
+        console.log('corrupted image file received');
+        return;
+    }else{
+        if(pngReceivedTimer != null){
+            updateGameStatus(gameNum, STATUS_NEW_GAME_TIMER);
+            clearTimeout(pngReceivedTimer);
+        }
+    }
     console.log('game object after png received:');
     console.log(gameObj);
+
     postToFacebookPage(gameObj,imgFileName);
 });
+
+var pngReceivedTimer;
+function startPngReceiveTimer(gameNum) {
+    pngReceivedTimer = setTimeout(function(){
+        //check if png failed
+        var gameObj = getGameObj(gameNum);
+        if(gameObj.status == STATUS_WINNER_LOGGED_IN){
+            updateGameStatus(gameNum, STATUS_NEW_GAME_TIMER);
+            var path = __dirname + "/uploads/defaultWinnerImg"+gameNum+".png";
+            downloadPng('https://www.google.com/images/srpr/logo3w.png', path, function(){
+                console.log('done');
+                postToFacebookPage(gameObj,"defaultWinnerImg"+gameNum+".png");
+            });
+
+        }
+
+    }, PNG_RECEIVE_TIMEOUT_MILLIS);
+
+}
+
+
+var downloadPng = function(uri, filename, callback){
+    request.head(uri, function(err, res, body){
+        console.log('content-type:', res.headers['content-type']);
+        console.log('content-length:', res.headers['content-length']);
+
+        request(uri).pipe(fs.createWriteStream(filename)).on('close', callback);
+    });
+};
+
+
 
 
 
@@ -277,7 +321,11 @@ usersCallbackRef.on("value", function(snapshot) {
 
 
 
-
+function verifyNotWinnerTimeout(uid,gameNum) {
+    if (uid in timeoutWinners)
+        return 0;
+    return gameNum;
+}
 
 
 
@@ -304,9 +352,10 @@ function iWon(uid,gameNum) {
                 gameNum = checkReallyWon(gameNum,gameScoreObj,uid);
                 console.log("winner found for game " + gameNum);
             }else{
+                //means he never had a game score, can't be a real winner
                 gameNum = 0;
             }
-
+            gameNum = verifyNotWinnerTimeout(uid,gameNum);
             if (gameNum == 0) {
                 addToBlackList(uid);
                 removeUserCallback(uid,"iWon");
@@ -468,7 +517,7 @@ function getGameObj(gameNum){
 function onWinnerFacebookLogin(uid, winnerObj){
     console.log("winner connected to facebook!");
     var gameNum = getWinnerGameNum(uid);
-    updateGameStatus(gameNum, STATUS_NEW_GAME_DELAY);
+    updateGameStatus(gameNum, STATUS_WINNER_LOGGED_IN);
     console.log("winner game num: "+ gameNum);
     if(gameNum === 0) {
         addToBlackList(uid);
@@ -476,7 +525,9 @@ function onWinnerFacebookLogin(uid, winnerObj){
     }
     updateLocalGameObjNewWinner(gameNum,winnerObj);
    calcAndPushNewGame(gameNum)
+    startPngReceiveTimer(gameNum);
 }
+
 function updateLocalGameObjNewWinner(gameNum,winnerObj) {
     console.log("winner obj");
     console.log(winnerObj);
