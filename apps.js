@@ -154,7 +154,7 @@ function startPngReceiveTimer(gameNum) {
         if(gameObj.status == STATUS_WINNER_LOGGED_IN){
             updateGameStatus(gameNum, STATUS_NEW_GAME_TIMER);
             var path = __dirname + "/uploads/defaultWinnerImg"+gameNum+".png";
-            downloadPng('https://www.google.com/images/srpr/logo3w.png', path, function(){
+            downloadPng(gameObj.prizeImgUrl, path, function(){
                 console.log('done');
                 postToFacebookPage(gameObj,"defaultWinnerImg"+gameNum+".png");
             });
