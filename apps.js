@@ -66,6 +66,8 @@ function validateTimeoutWinnersList() {
             if (currentTimeMillis >= timeoutWinners[winnerUid]) {
                 console.log('winner deleted  - '+winnerUid);
                 delete timeoutWinners[winnerUid];
+                var winnerTimeoutRef =  db.ref("users/"+uid+"/winnerTimeout");
+                winnerTimeoutRef.set(null);
             }
         }
     }
@@ -114,7 +116,7 @@ app.listen(app.get('port'),function(){
 });
 
 // get winner social image file
-app.post('/file_upload', upload.single('png'), function (req, res, next) {
+app.post('/file_upload', upload.single('file'), function (req, res, next) {
     console.log('image file received!');
     var gameNum = req.body.gameNum;
     console.log('image upload for game num'+gameNum);
@@ -355,6 +357,7 @@ function startFacebookLoginTimer(gameNum,uid) {
     console.log(gameObj);
     setTimeout(function(){
         if(gameObj.status === STATUS_PENDING_WINNER){
+            // if(pullQwinner(gameObj) !)
             console.log("timer ended. winner lost. resuming game (game running true, pending winner false)");
             gameRef.update({
                 "gameRunning": true,
