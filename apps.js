@@ -128,6 +128,8 @@ app.post('/file_upload', upload.single('png'), function (req, res, next) {
      }*/
     console.log('uid from file: '+ uid);
     console.log('image name: '+ imgFileName);
+    console.log('game object after png received:');
+    console.log(gameObj);
     postToFacebookPage(gameObj,imgFileName);
 });
 
