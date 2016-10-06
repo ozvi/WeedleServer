@@ -66,7 +66,7 @@ function validateTimeoutWinnersList() {
             if (currentTimeMillis >= timeoutWinners[winnerUid]) {
                 console.log('winner deleted  - '+winnerUid);
                 delete timeoutWinners[winnerUid];
-                var winnerTimeoutRef =  db.ref("users/"+uid+"/winnerTimeout");
+                var winnerTimeoutRef =  db.ref("users/"+winnerUid+"/winnerTimeout");
                 winnerTimeoutRef.set(null);
             }
         }
