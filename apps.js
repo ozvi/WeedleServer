@@ -782,11 +782,22 @@ function resetCurrentGamePreset(gameNum) {
         game2.currentGamePreset = 0;
     }
 }
+
+function clearNewGameTimeout(gameNum) {
+    if(gameNum == 1) {
+        if (newGame1Timeout != null) {
+            clearTimeout(newGame1Timeout);
+        }
+    }else if(gameNum == 2){
+        if (newGame2Timeout != null) {
+            clearTimeout(newGame2Timeout);
+        }
+    }
+
+}
 function pushNewGame(gameNum, gameStartTime){
     console.log("game start time millis: "+gameStartTime);
-    if(newGameTimeout != null){
-        clearTimeout(newGameTimeout);
-    }
+    clearNewGameTimeout(gameNum)
     resetGameScores(gameNum);
     incrementCurrentGamePreset(gameNum);
     console.log("itzik44");
@@ -848,24 +859,30 @@ function setLocalGameData(gameNum, gameObj) {
         game2.gameNum = 2;
     }
 }
-var newGameTimeout; //global because in some cause will get stopped
+var newGame1Timeout,newGame2Timeout; //global because in some cause will get stopped
 function startGameTimer (gameObj, gameVarsRef,gameNum) {
     console.log("timer start: " +gameObj.secsDelay);
-    newGameTimeout = setTimeout(function(){
+    if(gameNum == 1){
+        newGame1Timeout = makeNewGameTimeout(gameNum,gameObj);
+    }else if(gameNum == 2){
+        newGame2Timeout = makeNewGameTimeout(gameNum,gameObj);
+    }
+};
+function makeNewGameTimeout(gameNum,gameObj) {
+    return setTimeout(function(){
         gameVarsRef.update({
-        "gameRunning": true,
-        "pendingWinner": null,
-        "newGameStarted": true,
-        "winner": null,
-        "medianBarPercent": 0,
-        "resetGameScores": false
-        })
+            "gameRunning": true,
+            "pendingWinner": null,
+            "newGameStarted": true,
+            "winner": null,
+            "medianBarPercent": 0,
+            "resetGameScores": false
+        });
         resetGameScores(gameNum);
         resetLocalGame(gameNum, gameObj);
         updateGameStatus(gameNum, STATUS_GAME_RUNNING);
     }, gameObj.secsDelay*1000);
-};
-
+}
 
 function getCurrentMillis(){
     var d = new Date();
