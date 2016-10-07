@@ -26,6 +26,7 @@ const MEDIAN_BAR_INTERVAL = 1000*10;
 const MAX_CLICK_SPEED_MILLIS = 30;
 const MIN_FIRST_COMMIT_SCORE = 2000; // the max allowed first score queue request
 const MIN_ALLOWED_WINNER_SCORE_GAP = 1000;
+const DEFAULT_HELMET_LEVEL = 0;
 const FACEBOOK_POST_URL_PREFIX = "https://www.facebook.com/weedleApp/photos/";
 const FACEBOOK_TOKEN = "EAAQYGxi5eL8BACcpWZBgcdVX1IQtT55OXUiPDiCybtLDpcnli4p9B5YBLAC4bILF6uZCzZAfU3ZAvvdLZCiqLD2BQ8SmIxsp1UAIOYSmQR6YCis6uKdQ4aj9yTYgr6JWd1kcsWV9ZAtPVtHvibhRiUAPQOr5TZAkXAZD";
 var facebookRequire = require('fb');
@@ -141,6 +142,16 @@ var iWonQueue = new Queue(iWonQueueRef, queueOptions , function(iWonTask, progre
 });
 
 
+var helmetQueueRef = db.ref('helmetQueue');
+var helmetQueue = new Queue(helmetQueueRef, queueOptions , function(helmetTask, progress, resolve, reject) {
+    incrementHelmetToUser(helmetTask.uid);
+    setTimeout(function() {
+        resolve();
+    }, 0);
+});
+
+
+
 var facebookUserQueueRef = db.ref('facebookUserQueue');
 var facebookUserQueue = new Queue(facebookUserQueueRef, queueOptions , function(facebookUserTask, progress, resolve, reject) {
     console.log("facebook user queue new facebook account");
@@ -159,8 +170,39 @@ function isWinnerFacebookLogin(facebookUserTask) {
     return false;
 }
 
-//TODO ADD HELMET REWARD TO USERS
 
+
+function incrementHelmetToUser(uid) {
+    var userRef = db.ref("users/"+uid);
+    var userHelmetLevelRef = db.ref("users/"+uid+"/helmetLevel");
+    userHelmetLevelRef.once("value", function(snapshot) {
+        console.log("incrementing helmetLevel to uid "+uid);
+        var newHelmetLevel = snapshot.val()+1;
+        userRef.update({
+            "helmetLevel": newHelmetLevel
+        });
+        updateHelmetLevelToBillboard(uid,newHelmetLevel);
+    }, function (errorObject) {
+        console.log("The read failed: " + errorObject.code);
+    });
+}
+function updateHelmetLevelToBillboard(uid,newHelmetLevel) {
+    var billboardRef = db.ref("billboard");
+    billboardRef.once("value", function(snapshot) {
+        console.log("updating billboard with new helmet level for uid "+uid);
+        try {
+            snapshot.forEach(function(childSnapshot) {
+                var billboardSingleObj = childSnapshot.val();
+                if(uid == billboardSingleObj.uid)
+                    billboardSingleObj.helmetLevel = newHelmetLevel;
+            });
+        } catch (e) {
+        }
+
+    }, function (errorObject) {
+        console.log("The read failed: " + errorObject.code);
+    });
+}
 
 function validateAddressQueue(addressTask) {
     for (var winnerUid in timeoutWinners){
@@ -653,6 +695,8 @@ function publishWinnerDetails(gameNum) {
     var billboardRef = db.ref("billboard");
     billboardRef.push().set({
         "firstName": winnerObj.firstName ,
+        "uid": winnerObj.uid ,
+        "helmetLevel": DEFAULT_HELMET_LEVEL,
         "lastName": winnerObj.lastName,
         "profileImgUrl": winnerObj.profileImgUrl,
         "prizeImgUrl": gameObj.prizeImgUrl,
@@ -1071,10 +1115,11 @@ function checkReallyWon(gameNum, gameScoreObj, uid) {
 }
 function addNewUser(userObj) {
     console.log("new user: " + userObj.uid);
-    var usersRef = db.ref("users/"+userObj.uid);
-    usersRef.update({
-        "deviceId":userObj.deviceId
-    });
+    var userRef = db.ref("users/"+userObj.uid);
+        userRef.update({
+            "deviceId":userObj.deviceId,
+            "helmetLevel":DEFAULT_HELMET_LEVEL
+        });
 }
 
 /*
