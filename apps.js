@@ -146,6 +146,7 @@ var facebookUserQueue = new Queue(facebookUserQueueRef, queueOptions , function(
     console.log("facebook user queue new facebook account");
     if(isWinnerFacebookLogin(facebookUserQueueRef)){
         onWinnerFacebookLogin(facebookUserTask);
+        addTimeoutWinner(facebookUserTask.uid);
     }
     updateUserFacebookDetails(facebookUserTask);
     setTimeout(function() {
@@ -472,7 +473,6 @@ function pendingWinnerFuncs(uid,gameNum) {
     newPendingWinner(gameNum);
     calcAndNotifyWinnerHeWon(uid, gameNum);
     startFacebookLoginTimer(gameNum,uid);
-    addTimeoutWinner(uid);
     console.log("new pending winner for game "+gameNum);
 }
 
