@@ -756,11 +756,13 @@ function setLocalGameData(gameNum, gameObj) {
         game1.blackList = [];
         game1.facebookTimerEndSeconds = gameObj.facebookTimerEndSeconds;
         game1.facebookPostMsg = gameObj.facebookPostMsg;
+        game1.qWinners = [];
         game1.gameNum = 1;
     }else  if(gameNum == 2){
         game2.prizeImgUrl = gameObj.prizeImgUrl;
         game2.gameSize = gameObj.gameSize;
         game2.blackList = [];
+        game2.qWinners = [];
         game2.facebookTimerEndSeconds = gameObj.facebookTimerEndSeconds;
         game2.facebookPostMsg = gameObj.facebookPostMsg;
         game2.gameNum = 2;
