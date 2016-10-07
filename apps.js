@@ -443,7 +443,6 @@ function iWon(uid,gameNum) {
             gameNum = verifyNotWinnerTimeout(uid,gameNum);
             if (gameNum == 0) {
                 addToBlackList(uid);
-                removeUserCallback(uid,"iWon");
                 return;
             }
             var gameObj = getGameObj(gameNum);
@@ -454,7 +453,6 @@ function iWon(uid,gameNum) {
                 return;
             }
             //user really won, now needs to login facebook
-            removeUserCallback(uid,"iWon");
             if(isTempBlockedUser(uid, gameNum)) {
                 console.log("winner is in a temp block: "+uid);
                 return;
@@ -629,7 +627,7 @@ function onWinnerFacebookLogin(winnerObj){
         return;
     }
     updateLocalGameObjNewWinner(gameNum,winnerObj);
-   calcAndPushNewGame(gameNum)
+   calcAndPushNewGame(gameNum);
     startPngReceiveTimer(gameNum);
 }
 
