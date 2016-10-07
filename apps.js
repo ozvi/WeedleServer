@@ -19,14 +19,7 @@ var restler = require('restler');
  var poster= require('poster');
 var upload = multer({ dest: 'uploads/' });
 var fs = require('fs');
-require("jsdom").env("", function(err, window) {
-    if (err) {
-        console.error(err);
-        return;
-    }
 
-    var $ = require("jquery")(window);
-});
 
 const PORT = 9450;
 const MEDIAN_BAR_INTERVAL = 1000*10;
@@ -201,7 +194,7 @@ function postToFacebookPage(gameObj, imgName) {
         restler.post("https://graph.facebook.com/me/photos?access_token=" + FACEBOOK_TOKEN, {
             multipart: true,
             data: {
-                "message": $.validator.format(gameObj.facebookPostMsg,[winnerObj.firstName,winnerObj.lastName]),
+                "message": formatString(gameObj.facebookPostMsg,[winnerObj.firstName,winnerObj.lastName]),
                 "source": restler.file(path, null, stats.size, null, "image/png"),
                 "tags": idArrayString
             }
@@ -215,6 +208,12 @@ function postToFacebookPage(gameObj, imgName) {
             }
         });
     });
+}
+function formatString(source, params) {
+    $.each(params,function (i, n) {
+        source = source.replace(new RegExp("\\{" + i + "\\}", "g"), n);
+    })
+    return source;
 }
 function updateLocalGameObjWithFacebookLink(gameNum,facebookPostLink) {
         switch (gameNum){
