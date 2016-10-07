@@ -159,6 +159,8 @@ function isWinnerFacebookLogin(facebookUserTask) {
     return false;
 }
 
+//TODO ADD HELMET REWARD TO USERS
+
 
 function validateAddressQueue(addressTask) {
     for (var winnerUid in timeoutWinners){
