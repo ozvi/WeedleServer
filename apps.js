@@ -144,6 +144,7 @@ var iWonQueue = new Queue(iWonQueueRef, queueOptions , function(iWonTask, progre
 
 var helmetQueueRef = db.ref('helmetQueue');
 var helmetQueue = new Queue(helmetQueueRef, queueOptions , function(helmetTask, progress, resolve, reject) {
+    console.log("recevied new helmet queue for "+helmetTask.uid);
     incrementHelmetToUser(helmetTask.uid);
     setTimeout(function() {
         resolve();
@@ -186,23 +187,27 @@ function incrementHelmetToUser(uid) {
         console.log("The read failed: " + errorObject.code);
     });
 }
+
 function updateHelmetLevelToBillboard(uid,newHelmetLevel) {
     var billboardRef = db.ref("billboard");
     billboardRef.once("value", function(snapshot) {
         console.log("updating billboard with new helmet level for uid "+uid);
-        try {
             snapshot.forEach(function(childSnapshot) {
                 var billboardSingleObj = childSnapshot.val();
-                if(uid == billboardSingleObj.uid)
+                console.log(billboardSingleObj);
+                console.log("check "+uid+" and uid "+billboardSingleObj.uid);
+                if(uid == billboardSingleObj.uid) {
                     billboardSingleObj.helmetLevel = newHelmetLevel;
+                    var billboardHelmetRef = db.ref("billboard/"+childSnapshot.key+"/helmetLevel");
+                    billboardHelmetRef.set(newHelmetLevel);
+                }
             });
-        } catch (e) {
-        }
 
     }, function (errorObject) {
         console.log("The read failed: " + errorObject.code);
     });
 }
+
 
 function validateAddressQueue(addressTask) {
     for (var winnerUid in timeoutWinners){
@@ -947,8 +952,13 @@ function calcFutureTimerMillis (millis) {
 
 
 
-
-
+restartAllGames();
+function restartAllGames() {
+    for(var i = 0; i < activeGames.length; i++){
+        var adminControlRef = db.ref("adminControl/game"+activeGames[i]+"Reset");
+        adminControlRef.set(true);
+    }
+}
 
  var adminControlRef = db.ref("adminControl");
  // Attach an asynchronous callback to read the data at our posts reference
@@ -1042,13 +1052,19 @@ function resetGameScores(gameNum) {
     gameScoresRef.set(null);
 }
 function verifyGameScore(gameScoreTask) {
+    console.log("game score task");
+    console.log(gameScoreTask);
+    console.log("localGameObj");
     var localGameObj = getGameObj(gameScoreTask.gameNum);
+    console.log(localGameObj);
+    //TODO MAKE SURE GAME STATUS IS DEFINED
     if(localGameObj.status != STATUS_GAME_RUNNING)
         return;
     var gameScoresRef = db.ref("gameScores/game"+gameScoreTask.gameNum+"/"+gameScoreTask.uid);
     var currentTimeMillis = getCurrentMillis();
     gameScoresRef.once("value", function(snapshot) {
         try {
+            console.log("calculating new game score");
             var gameScoreObj = snapshot.val();
             var scoreGap = gameScoreTask.score - gameScoreObj.score;
             if(scoreGap != 0){
