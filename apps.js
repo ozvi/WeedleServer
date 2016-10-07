@@ -987,18 +987,18 @@ function verifyGameScore(gameScoreTask) {
         try {
             var gameScoreObj = snapshot.val();
             var scoreGap = gameScoreTask.score - gameScoreObj.score;
-            if(scoreGap == 0)return;
+            if(scoreGap != 0){
                 var timeGap = currentTimeMillis - gameScoreObj.lastUpdateMillis;
                 var speed = timeGap/scoreGap;
-            console.log("scoreGap: " + scoreGap);
-            console.log("timeGap: " + timeGap);
-            console.log("speed: " + speed);
+                console.log("scoreGap: " + scoreGap);
+                console.log("timeGap: " + timeGap);
+                console.log("speed: " + speed);
 
-            if(speed < MAX_CLICK_SPEED_MILLIS)
-                addToBlackList(gameScoreTask.uid);
+                if(speed < MAX_CLICK_SPEED_MILLIS)
+                    addToBlackList(gameScoreTask.uid);
 
-            updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis);
-
+                 updateNewGameScore(gameScoreTask, gameScoresRef, currentTimeMillis);
+            }
         }
         catch(err) {
             //if null, this must be the first commit
