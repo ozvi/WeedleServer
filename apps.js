@@ -863,12 +863,12 @@ var newGame1Timeout,newGame2Timeout; //global because in some cause will get sto
 function startGameTimer (gameObj, gameVarsRef,gameNum) {
     console.log("timer start: " +gameObj.secsDelay);
     if(gameNum == 1){
-        newGame1Timeout = makeNewGameTimeout(gameNum,gameObj);
+        newGame1Timeout = makeNewGameTimeout(gameNum,gameObj,gameVarsRef);
     }else if(gameNum == 2){
-        newGame2Timeout = makeNewGameTimeout(gameNum,gameObj);
+        newGame2Timeout = makeNewGameTimeout(gameNum,gameObj,gameVarsRef);
     }
 };
-function makeNewGameTimeout(gameNum,gameObj) {
+function makeNewGameTimeout(gameNum,gameObj,gameVarsRef) {
     return setTimeout(function(){
         gameVarsRef.update({
             "gameRunning": true,
