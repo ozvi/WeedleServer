@@ -383,7 +383,6 @@ function iWon(uid,gameNum) {
                 console.log("winner is in a temp block: "+uid);
                 return;
             }
-            gameObj.pendingWinner = uid;
             pendingWinnerFuncs(uid,gameNum);
         }, function (errorObject) {
             console.log("The read failed: " + errorObject.code);
@@ -394,6 +393,7 @@ function iWon(uid,gameNum) {
 }
 
 function pendingWinnerFuncs(uid,gameNum) {
+    gameObj.pendingWinner = uid;
     updateGameStatus(gameNum, STATUS_PENDING_WINNER);
     newPendingWinner(gameNum);
     calcAndNotifyWinnerHeWon(uid, gameNum);
