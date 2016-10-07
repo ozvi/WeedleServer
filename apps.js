@@ -1006,6 +1006,7 @@ function adminGameReset(gameNum) {
 var firebaseScoresQueueRef = db.ref('scoresQueue');
 var gameScoresQueue = new Queue(firebaseScoresQueueRef,queueOptions , function(gameScoreTask, progress, resolve, reject) {
     // Read and process task data
+    console.log("game score queue received!")
     verifyGameScore(gameScoreTask);
     setTimeout(function() {
         resolve();
