@@ -384,18 +384,22 @@ function iWon(uid,gameNum) {
                 return;
             }
             gameObj.pendingWinner = uid;
-            updateGameStatus(gameNum, STATUS_PENDING_WINNER);
-            newPendingWinner(gameNum);
-            calcAndNotifyWinnerHeWon(uid, gameNum);
-            startFacebookLoginTimer(gameNum,uid);
-            addTimeoutWinner(uid);
-            console.log("new pending winner for game "+gameNum);
+            pendingWinnerFuncs(uid,gameNum);
         }, function (errorObject) {
             console.log("The read failed: " + errorObject.code);
         });
     }, function (errorObject) {
         console.log("The read failed: " + errorObject.code);
     });
+}
+
+function pendingWinnerFuncs(uid,gameNum) {
+    updateGameStatus(gameNum, STATUS_PENDING_WINNER);
+    newPendingWinner(gameNum);
+    calcAndNotifyWinnerHeWon(uid, gameNum);
+    startFacebookLoginTimer(gameNum,uid);
+    addTimeoutWinner(uid);
+    console.log("new pending winner for game "+gameNum);
 }
 
 
@@ -417,18 +421,28 @@ function startFacebookLoginTimer(gameNum,uid) {
     console.log(gameObj);
     setTimeout(function(){
         if(gameObj.status === STATUS_PENDING_WINNER){
-            // if(pullQwinner(gameObj) !)
-            console.log("timer ended. winner lost. resuming game (game running true, pending winner false)");
-            gameRef.update({
-                "gameRunning": true,
-                "pendingWinnerInfo": null,
-                "pendingWinner": false
-            });
-            //TODO CHECK IF WE HAVE QWINNERS WAITING IN LINE BEFORE RESTARTING THE GAME
-            updateGameStatus(gameNum,STATUS_GAME_RUNNING);
             addUserToTempBlackList(uid,gameNum);
+            var qWinner = pullQwinner(gameObj);
+            if(qWinner == null){
+                console.log("timer ended. winner lost. resuming game (game running true, pending winner false)");
+                gameRef.update({
+                    "gameRunning": true,
+                    "pendingWinnerInfo": null,
+                    "pendingWinner": false
+                });
+                updateGameStatus(gameNum,STATUS_GAME_RUNNING);
+            }else{
+                pendingWinnerFuncs(qWinner,gameNum);
+            }
         }
     },gameObj.facebookTimerEndSeconds*1000);
+}
+function pullQwinner(gameObj) {
+    if(gameObj.qWinners == null || gameObj.qWinners.length == 0)
+        return null;
+    var qWinner = gameObj.qWinners[0];
+    delete gameObj.qWinners[0];
+    return qWinner;
 }
 function addUserToTempBlackList(uid,gameNum) {
     console.log("adding "+uid+" to temp black list");
