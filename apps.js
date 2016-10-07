@@ -19,6 +19,15 @@ var restler = require('restler');
  var poster= require('poster');
 var upload = multer({ dest: 'uploads/' });
 var fs = require('fs');
+require("jsdom").env("", function(err, window) {
+    if (err) {
+        console.error(err);
+        return;
+    }
+
+    var $ = require("jquery")(window);
+});
+
 const PORT = 9450;
 const MEDIAN_BAR_INTERVAL = 1000*10;
 const MAX_CLICK_SPEED_MILLIS = 30;
@@ -192,7 +201,7 @@ function postToFacebookPage(gameObj, imgName) {
         restler.post("https://graph.facebook.com/me/photos?access_token=" + FACEBOOK_TOKEN, {
             multipart: true,
             data: {
-                "message": winnerFullName+" "+gameObj.facebookPostMsg,
+                "message": $.validator.format(gameObj.facebookPostMsg,[winnerObj.firstName,winnerObj.lastName]),
                 "source": restler.file(path, null, stats.size, null, "image/png"),
                 "tags": idArrayString
             }
