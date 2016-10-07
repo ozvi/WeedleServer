@@ -144,8 +144,7 @@ var iWonQueue = new Queue(iWonQueueRef, queueOptions , function(iWonTask, progre
 var facebookUserQueueRef = db.ref('facebookUserQueue');
 var facebookUserQueue = new Queue(facebookUserQueueRef, queueOptions , function(facebookUserTask, progress, resolve, reject) {
     console.log("facebook user queue new facebook account");
-    console.log(facebookUserTask);
-    if(isWinnerFacebookLogin(facebookUserQueueRef)){
+    if(isWinnerFacebookLogin(facebookUserTask)){
         onWinnerFacebookLogin(facebookUserTask);
         addTimeoutWinner(facebookUserTask.uid);
     }
