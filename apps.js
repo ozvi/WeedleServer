@@ -38,6 +38,10 @@ var facebook = new facebookRequire.Facebook(options);
 
 
 
+//queue options
+var queueOptions = {
+    'numWorkers': 1
+};
 
 
 const STATUS_NO_STATUS = 0;
@@ -65,39 +69,8 @@ var game1ActiveUsersScores = {};
 var game2ActiveUsersScores = {};
 var timeoutWinners= {};
 
-function validateTimeoutWinnersList() {
-    var currentTimeMillis = getCurrentMillis();
-    console.log('winner timeout list before:');
-    console.log(timeoutWinners);
-    for (var winnerUid in timeoutWinners){
-        if (typeof timeoutWinners[winnerUid] !== 'function') {
-            if (currentTimeMillis >= timeoutWinners[winnerUid]) {
-                console.log('winner deleted  - '+winnerUid);
-                delete timeoutWinners[winnerUid];
-                var winnerTimeoutRef =  db.ref("users/"+winnerUid+"/winnerTimeout");
-                winnerTimeoutRef.set(null);
-            }
-        }
-    }
-    console.log('winner timeout list after:');
-    console.log(timeoutWinners);
-}
-function addTimeoutWinner(uid) {
-    var timeStampRef = db.ref("timeStamp");
-    timeStampRef.set(firebase.database.ServerValue.TIMESTAMP,function(error) {
-        if (error) {
-            console.log('Synchronization failed');
-        } else {
-            timeStampRef.once("value", function(snapshot) {
-                timeoutWinners[uid] = snapshot.val()+WINNER_TIMEOUT_MILLIS;
-                var userRef =  db.ref("users/"+uid+"/winnerTimeout");
-                userRef.set(snapshot.val() + WINNER_TIMEOUT_MILLIS);
-            }, function (errorObject) {
-                console.log("The read failed: " + errorObject.code);
-            });
-        }
-    });
-}
+
+
 
 
 
@@ -147,6 +120,126 @@ app.post('/file_upload', upload.single('png'), function (req, res, next) {
 
     postToFacebookPage(gameObj,imgFileName);
 });
+
+
+
+
+var addressQueueRef = db.ref('addressQueue');
+var addressQueue = new Queue(addressQueueRef,queueOptions , function(addressTask, progress, resolve, reject) {
+    validateAddressQueue(addressTask);
+    setTimeout(function() {
+        resolve();
+    }, 0);
+});
+
+var iWonQueueRef = db.ref('iWonQueue');
+var iWonQueue = new Queue(iWonQueueRef, queueOptions , function(iWonTask, progress, resolve, reject) {
+    iWon(iWonTask.uid,iWonTask.gameNum);
+    setTimeout(function() {
+        resolve();
+    }, 0);
+});
+
+
+var facebookUserQueueRef = db.ref('facebookUserQueue');
+var facebookUserQueue = new Queue(facebookUserQueueRef, queueOptions , function(facebookUserTask, progress, resolve, reject) {
+    //TODO CHECK IF THE USER IS A WINNER OR JUST A REGULAR FACEBOOK LOGIN
+    console.log("facebook user queue new facebook account");
+    onWinnerFacebookLogin(facebookUserTask.uid, facebookUserTask.facebookUser);
+    updateUserFacebookDetails(facebookUserTask.facebookUser);
+    setTimeout(function() {
+        resolve();
+    }, 0);
+});
+
+
+
+function validateAddressQueue(addressTask) {
+    for (var winnerUid in timeoutWinners){
+        if (typeof timeoutWinners[winnerUid] !== 'function') {
+            if(addressTask.uid == winnerUid){
+                var userRef =  db.ref('users/'+addressTask.uid+"/address");
+                userRef.set({
+                    "fullName": addressTask.fullName,
+                    "address1": addressTask.address1,
+                    "address2": addressTask.address2,
+                    "city": addressTask.city,
+                    "state": addressTask.state,
+                    "country": addressTask.country,
+                    "zip": addressTask.zip,
+                    "phone": addressTask.phone,
+                    "comment": addressTask.comment
+                });
+                return;
+            }
+        }
+    }
+}
+
+
+/*var usersCallbackRef = db.ref("usersCallback");
+usersCallbackRef.on("value", function(snapshot) {
+    snapshot.forEach(function(childSnapshot) {
+        var uidKey = childSnapshot.key;
+        var childData = childSnapshot.val();
+        if (childData.iWon) {
+            iWon(uidKey,childData.iWon);
+        } else if (childData.facebookUser) {
+            console.log("user callback new facebook account");
+            //TODO CHECK IF THE USER IS A WINNER OR JUST A REGULAR FACEBOOK LOGIN
+            onWinnerFacebookLogin(uidKey, childData.facebookUser);
+            updateUserFacebookDetails(uidKey, childData.facebookUser);
+            removeUserCallback(uidKey,"facebookUser");
+        } else if (childData.userAddress) {
+            removeUserCallback(uidKey,"userAddress");
+        }
+    });
+}, function (errorObject) {
+    console.log("userscallback read failed: " + errorObject.code);
+});*/
+
+
+
+function validateTimeoutWinnersList() {
+    var currentTimeMillis = getCurrentMillis();
+    console.log('winner timeout list before:');
+    console.log(timeoutWinners);
+    for (var winnerUid in timeoutWinners){
+        if (typeof timeoutWinners[winnerUid] !== 'function') {
+            if (currentTimeMillis >= timeoutWinners[winnerUid]) {
+                console.log('winner deleted  - '+winnerUid);
+                delete timeoutWinners[winnerUid];
+                var winnerTimeoutRef =  db.ref("users/"+winnerUid+"/winnerTimeout");
+                winnerTimeoutRef.set(null);
+            }
+        }
+    }
+    console.log('winner timeout list after:');
+    console.log(timeoutWinners);
+}
+function addTimeoutWinner(uid) {
+    var timeStampRef = db.ref("timeStamp");
+    timeStampRef.set(firebase.database.ServerValue.TIMESTAMP,function(error) {
+        if (error) {
+            console.log('Synchronization failed');
+        } else {
+            timeStampRef.once("value", function(snapshot) {
+                timeoutWinners[uid] = snapshot.val()+WINNER_TIMEOUT_MILLIS;
+                var userRef =  db.ref("users/"+uid+"/winnerTimeout");
+                userRef.set(snapshot.val() + WINNER_TIMEOUT_MILLIS);
+            }, function (errorObject) {
+                console.log("The read failed: " + errorObject.code);
+            });
+        }
+    });
+}
+
+
+
+
+
+
+
 
 var pngReceivedTimer;
 function startPngReceiveTimer(gameNum) {
@@ -305,28 +398,6 @@ function medianCalcInfinateLoop(interval) {
 
 
 
- var usersCallbackRef = db.ref("usersCallback");
- // Attach an asynchronous callback to read the data at our posts reference
-usersCallbackRef.on("value", function(snapshot) {
-     snapshot.forEach(function(childSnapshot) {
-         var uidKey = childSnapshot.key;
-         var childData = childSnapshot.val();
-         if (childData.iWon) {
-             iWon(uidKey,childData.iWon);
-         } else if (childData.facebookUser) {
-             console.log("user callback new facebook account");
-             //TODO CHECK IF THE USER IS A WINNER OR JUST A REGULAR FACEBOOK LOGIN
-             onWinnerFacebookLogin(uidKey, childData.facebookUser);
-             updateUserFacebookDetails(uidKey, childData.facebookUser);
-             removeUserCallback(uidKey,"facebookUser");
-         } else if (childData.userAddress) {
-             //TODO SAVE WINNER ADDRESS to users folders
-             removeUserCallback(uidKey,"userAddress");
-         }
-     });
- }, function (errorObject) {
- console.log("userscallback read failed: " + errorObject.code);
- });
 
 
 
@@ -467,11 +538,6 @@ function addToArray(array, val){
     console.log(array);
 }
 
-function removeUserCallback(uid,folder) {
-    console.log("removing user callback:callback/"+uid+"/"+folder);
-    var userCallbackRed = db.ref("usersCallback/"+uid+"/"+folder);
-    userCallbackRed.set(null);
-}
 
 
 function calcAndNotifyWinnerHeWon(uid, gameNum) {
@@ -602,9 +668,9 @@ function publishWinnerDetailsToGame(gameNum, winnerObj) {
 }
 
 
-function updateUserFacebookDetails(uid, winnerObj) {
+function updateUserFacebookDetails(winnerObj) {
     console.log("updating winner details");
-    var userFolderRef = db.ref("users/"+uid);
+    var userFolderRef = db.ref("users/"+winnerObj.uid);
     userFolderRef.update({
         "firstName": winnerObj.firstName,
         "lastName":  winnerObj.lastName,
@@ -870,10 +936,7 @@ function adminGameReset(gameNum) {
 }
 
 
-//queue options
-var queueOptions = {
-    'numWorkers': 1
-};
+
 var firebaseScoresQueueRef = db.ref('scoresQueue');
 var gameScoresQueue = new Queue(firebaseScoresQueueRef,queueOptions , function(gameScoreTask, progress, resolve, reject) {
     // Read and process task data
