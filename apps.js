@@ -393,13 +393,24 @@ function iWon(uid,gameNum) {
 }
 
 function pendingWinnerFuncs(uid,gameNum) {
-    gameObj.pendingWinner = uid;
+    updateLocalGameObjPendingWinner(gameNum,uid);
     updateGameStatus(gameNum, STATUS_PENDING_WINNER);
     newPendingWinner(gameNum);
     calcAndNotifyWinnerHeWon(uid, gameNum);
     startFacebookLoginTimer(gameNum,uid);
     addTimeoutWinner(uid);
     console.log("new pending winner for game "+gameNum);
+}
+
+function updateLocalGameObjPendingWinner(gameNum,uid) {
+    switch (gameNum){
+        case 1:
+            game1.pendingWinner = uid;
+            break;
+        case 2:
+            game2.pendingWinner = uid;
+            break;
+    }
 }
 
 
