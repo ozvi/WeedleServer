@@ -143,15 +143,20 @@ var iWonQueue = new Queue(iWonQueueRef, queueOptions , function(iWonTask, progre
 
 var facebookUserQueueRef = db.ref('facebookUserQueue');
 var facebookUserQueue = new Queue(facebookUserQueueRef, queueOptions , function(facebookUserTask, progress, resolve, reject) {
-    //TODO CHECK IF THE USER IS A WINNER OR JUST A REGULAR FACEBOOK LOGIN
     console.log("facebook user queue new facebook account");
-    onWinnerFacebookLogin(facebookUserTask.uid, facebookUserTask.facebookUser);
-    updateUserFacebookDetails(facebookUserTask.facebookUser);
+    if(isWinnerFacebookLogin(facebookUserQueueRef)){
+        onWinnerFacebookLogin(facebookUserTask);
+    }
+    updateUserFacebookDetails(facebookUserTask);
     setTimeout(function() {
         resolve();
     }, 0);
 });
-
+function isWinnerFacebookLogin(facebookUserTask) {
+    if(getGameObj(facebookUserTask.gameNum).pendingWinner == facebookUserTask.uid)
+        return true;
+    return false;
+}
 
 
 function validateAddressQueue(addressTask) {
@@ -614,13 +619,13 @@ function getGameObj(gameNum){
     }
 }
 
-function onWinnerFacebookLogin(uid, winnerObj){
+function onWinnerFacebookLogin(winnerObj){
     console.log("winner connected to facebook!");
-    var gameNum = getWinnerGameNum(uid);
+    var gameNum = getWinnerGameNum(winnerObj.uid);
     updateGameStatus(gameNum, STATUS_WINNER_LOGGED_IN);
     console.log("winner game num: "+ gameNum);
     if(gameNum === 0) {
-        addToBlackList(uid);
+        addToBlackList(winnerObj.uid);
         return;
     }
     updateLocalGameObjNewWinner(gameNum,winnerObj);
@@ -669,7 +674,7 @@ function publishWinnerDetailsToGame(gameNum, winnerObj) {
 
 
 function updateUserFacebookDetails(winnerObj) {
-    console.log("updating winner details");
+    console.log("updating user facebook details");
     var userFolderRef = db.ref("users/"+winnerObj.uid);
     userFolderRef.update({
         "firstName": winnerObj.firstName,
@@ -902,7 +907,7 @@ function adminGameReset(gameNum) {
     calcAndPushNewGame(gameNum);
     var adminGameResetRef = db.ref("adminControl/game"+gameNum+"Reset");
     var firstWinner = true;
-    var billboardRef = db.ref("billboard").limitToFirst(1);//orderByChild('timestamp').startAt(Date.now());
+    var billboardRef = db.ref("billboard").limitToLast(1);//orderByChild('timestamp').startAt(Date.now());
     billboardRef.once("value", function(snapshot) {
         console.log("foreach billboard started ");
         try {
