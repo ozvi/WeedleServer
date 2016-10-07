@@ -210,9 +210,10 @@ function postToFacebookPage(gameObj, imgName) {
     });
 }
 function formatString(source, params) {
-    $.each(params,function (i, n) {
-        source = source.replace(new RegExp("\\{" + i + "\\}", "g"), n);
-    })
+    var arrayLength = params.length;
+    for (var i = 0;i < arrayLength; i++){
+        source = source.replace(new RegExp("\\{" + i + "\\}", "g"), params[i]);
+    }
     return source;
 }
 function updateLocalGameObjWithFacebookLink(gameNum,facebookPostLink) {
