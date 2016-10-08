@@ -699,7 +699,10 @@ function updateTopLosers(gameNum) {
      [ 'JuBSTYZAWwUND4zAwJ3QHqBAWQo2', 100 ] ]
 
      */
-    for(var i = 0; i < TOP_LOSERS_THRESHOLD; i++){
+    var topLoserLimit = TOP_LOSERS_THRESHOLD;
+    if(usersCount < TOP_LOSERS_THRESHOLD)
+        topLoserLimit = usersCount;
+    for(var i = 0; i < topLoserLimit; i++){
         var uid = sortsScores[usersCount-i][0];
         var topLoserUserRef = db.ref("users/"+uid+"/topLoserNotifier");
         topLoserUserRef.set({
