@@ -27,6 +27,7 @@ const MEDIAN_BAR_INTERVAL = 1000*10;
 const MAX_CLICK_SPEED_MILLIS = 30;
 const MIN_FIRST_COMMIT_SCORE = 2000; // the max allowed first score queue request
 const MIN_ALLOWED_WINNER_SCORE_GAP = 1000;
+const PUSH_NOTIFY_PRE_GAME_MILLIS = 1000;
 const DEFAULT_HELMET_LEVEL = 0;
 const FACEBOOK_POST_URL_PREFIX = "https://www.facebook.com/weedleApp/photos/";
 const FACEBOOK_TOKEN = "EAAQYGxi5eL8BACcpWZBgcdVX1IQtT55OXUiPDiCybtLDpcnli4p9B5YBLAC4bILF6uZCzZAfU3ZAvvdLZCiqLD2BQ8SmIxsp1UAIOYSmQR6YCis6uKdQ4aj9yTYgr6JWd1kcsWV9ZAtPVtHvibhRiUAPQOr5TZAkXAZD";
@@ -70,8 +71,10 @@ var activeGames = [1,2];
 var game1 = {};
 var game2 = {};
 var game1ActiveUsersScores = {};
-var topLosersUids = [];
 var game2ActiveUsersScores = {};
+var pushNotifyUidListGame1 = [];
+var pushNotifyUidListGame2 = [];
+var topLosersUids = [];
 var timeoutWinners= {};
 //this will count for how many times medain was calculated since last game won
 var topLosersLoopCount = TOP_LOSERS_THRESHOLD;
@@ -156,6 +159,32 @@ var helmetQueue = new Queue(helmetQueueRef, queueOptions , function(helmetTask, 
     }, 0);
 });
 
+
+var pushNotifyQueueRef = db.ref('pushNotifyQueue');
+var pushNotifyQueue = new Queue(pushNotifyQueueRef, queueOptions , function(pushNotifyTask, progress, resolve, reject) {
+    console.log("push notify me queue arrived!");
+    console.log(pushNotifyTask);
+    //TODO ACTIVATE WHEN NEEDING PUSH NOTIFICATION SERVICES
+    //addUidToPushNotifyList(pushNotifyTask);
+    setTimeout(function() {
+        resolve();
+    }, 0);
+});
+function addUidToPushNotifyList(pushNotifyTask) {
+    var gameNum = pushNotifyTask.gameNum;
+    if(gameNum == 1){
+        addToArray(pushNotifyUidListGame1,pushNotifyTask.uid);
+    }else if(gameNum == 2){
+        addToArray(pushNotifyUidListGame2,pushNotifyTask.uid);
+    }
+}
+function clearPushNotifyList(gameNum) {
+    if(gameNum == 1){
+        pushNotifyUidListGame1 = [];
+    }else if(gameNum == 2){
+        pushNotifyUidListGame2 = [];
+    }
+}
 
 
 var facebookUserQueueRef = db.ref('facebookUserQueue');
@@ -684,6 +713,8 @@ function onWinnerFacebookLogin(winnerObj){
 function updateTopLosers(gameNum) {
     console.log("Updating top losers for game"+gameNum);
     var activeUsersObj = getActiveUsersScoresObj(gameNum);
+    console.log("active users");
+    console.log(activeUsersObj);
     var usersCount = Object.keys(activeUsersObj).length;
     var sortsScores = [];
     for (var user in activeUsersObj)
@@ -694,16 +725,24 @@ function updateTopLosers(gameNum) {
         }
     )
 
+
     /*
      [ [ 'uGsUXvket6Xu3wAxudulPUUKRfp1', 100 ],
      [ 'JuBSTYZAWwUND4zAwJ3QHqBAWQo2', 100 ] ]
 
      */
+    console.log("top scores");
+    console.log(sortsScores);
     var topLoserLimit = TOP_LOSERS_THRESHOLD;
     if(usersCount < TOP_LOSERS_THRESHOLD)
         topLoserLimit = usersCount;
-    for(var i = 0; i < topLoserLimit; i++){
-        var uid = sortsScores[usersCount-i][0];
+
+    console.log("top loser limit");
+    console.log(topLoserLimit);
+    for(var i = 0; i < topLoserLimit-1; i++){
+        var uid = sortsScores[usersCount-i-2][0];
+        console.log("uid");
+        console.log(uid);
         var topLoserUserRef = db.ref("users/"+uid+"/topLoserNotifier");
         topLoserUserRef.set({
             "usersCount":usersCount,
@@ -917,13 +956,20 @@ function pushNewGame(gameNum, gameStartTime){
         });
         //start timer for game start
         startGameTimer(gameObj,gameVarsRef,gameNum);
+        //TODO ACTIVATE WHEN NEEDING PUSH NOTIFICATION SERVICES
+        // startPushTimer(gameObj);
     }, function (errorObject) {
         console.log("The read failed: " + errorObject.code);
     });
 
 };
 
-
+function startPushTimer(gameObj) {
+    setTimeout(function(){
+        //TODO PUSH TO THE USERS LISTS
+        clearPushNotifyList(gameObj.gameNum)
+    }, (gameObj.secsDelay*1000)-PUSH_NOTIFY_PRE_GAME_MILLIS);
+}
 
 function setLocalGameData(gameNum, gameObj) {
     if(gameNum == 1){
@@ -966,6 +1012,7 @@ function makeNewGameTimeout(gameNum,gameObj,gameVarsRef) {
         resetGameScores(gameNum);
         resetLocalGame(gameNum, gameObj);
         updateGameStatus(gameNum, STATUS_GAME_RUNNING);
+        console.log("Game"+gameNum+" is now running");
     }, gameObj.secsDelay*1000);
 }
 
