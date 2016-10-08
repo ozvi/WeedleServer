@@ -22,6 +22,7 @@ var fs = require('fs');
 
 
 const PORT = 9450;
+const TOP_LOSERS_THRESHOLD = 5;
 const MEDIAN_BAR_INTERVAL = 1000*10;
 const MAX_CLICK_SPEED_MILLIS = 30;
 const MIN_FIRST_COMMIT_SCORE = 2000; // the max allowed first score queue request
@@ -52,9 +53,11 @@ const STATUS_WINNER_LOGGED_IN = 3;
 const STATUS_NEW_GAME_TIMER = 4;
 const STATUS_COMMERCIAL_BREAK = 5;
 
+const TOP_LOSER_LOOP_NOTIFY= 2;
 //TODO REPLACE WITH REAL ONE
 // const WINNER_TIMEOUT_MILLIS = (1000*60*60)*23;
 const WINNER_TIMEOUT_MILLIS = 1000*60*2;
+const NUM_OF_HELMETS = 2;
 
 
 
@@ -67,9 +70,11 @@ var activeGames = [1,2];
 var game1 = {};
 var game2 = {};
 var game1ActiveUsersScores = {};
+var topLosersUids = [];
 var game2ActiveUsersScores = {};
 var timeoutWinners= {};
-
+//this will count for how many times medain was calculated since last game won
+var topLosersLoopCount = TOP_LOSERS_THRESHOLD;
 
 
 
@@ -179,6 +184,8 @@ function incrementHelmetToUser(uid) {
     userHelmetLevelRef.once("value", function(snapshot) {
         console.log("incrementing helmetLevel to uid "+uid);
         var newHelmetLevel = snapshot.val()+1;
+        if(newHelmetLevel >= NUM_OF_HELMETS)
+            return;
         userRef.update({
             "helmetLevel": newHelmetLevel
         });
@@ -197,7 +204,6 @@ function updateHelmetLevelToBillboard(uid,newHelmetLevel) {
                 console.log(billboardSingleObj);
                 console.log("check "+uid+" and uid "+billboardSingleObj.uid);
                 if(uid == billboardSingleObj.uid) {
-                    billboardSingleObj.helmetLevel = newHelmetLevel;
                     var billboardHelmetRef = db.ref("billboard/"+childSnapshot.key+"/helmetLevel");
                     billboardHelmetRef.set(newHelmetLevel);
                 }
@@ -232,26 +238,7 @@ function validateAddressQueue(addressTask) {
 }
 
 
-/*var usersCallbackRef = db.ref("usersCallback");
-usersCallbackRef.on("value", function(snapshot) {
-    snapshot.forEach(function(childSnapshot) {
-        var uidKey = childSnapshot.key;
-        var childData = childSnapshot.val();
-        if (childData.iWon) {
-            iWon(uidKey,childData.iWon);
-        } else if (childData.facebookUser) {
-            console.log("user callback new facebook account");
-            //TODO CHECK IF THE USER IS A WINNER OR JUST A REGULAR FACEBOOK LOGIN
-            onWinnerFacebookLogin(uidKey, childData.facebookUser);
-            updateUserFacebookDetails(uidKey, childData.facebookUser);
-            removeUserCallback(uidKey,"facebookUser");
-        } else if (childData.userAddress) {
-            removeUserCallback(uidKey,"userAddress");
-        }
-    });
-}, function (errorObject) {
-    console.log("userscallback read failed: " + errorObject.code);
-});*/
+
 
 
 
@@ -416,6 +403,8 @@ function pushNewMedianToGames() {
                 return a[1] - b[1]
             }
         )
+        console.log("Sorted scores");
+        console.log(sortsScores);
         var percent = 0;
     if(sortsScores.length != 0){
         var median = 0;
@@ -439,12 +428,23 @@ function medianCalcInfinateLoop(interval) {
     function go () {
         pushNewMedianToGames();
         validateTimeoutWinnersList();
+        resetTopLosersValues();
         setTimeout(go,interval);
     }
     go();
 }
 
-
+function resetTopLosersValues () {
+    if(topLosersLoopCount >= TOP_LOSER_LOOP_NOTIFY)
+        return;
+    topLosersLoopCount++;
+    if(topLosersLoopCount >= TOP_LOSER_LOOP_NOTIFY){
+        for(var i = 0; i < topLosersUids.length; i++){
+            var topLoserRef = db.ref("users/"+topLosersUids[i]+"/topLoserNotifier");
+            topLoserRef.set(null);
+        }
+    }
+}
 
 
 
@@ -676,8 +676,39 @@ function onWinnerFacebookLogin(winnerObj){
         return;
     }
     updateLocalGameObjNewWinner(gameNum,winnerObj);
+    updateTopLosers(gameNum);
    calcAndPushNewGame(gameNum);
     startPngReceiveTimer(gameNum);
+}
+
+function updateTopLosers(gameNum) {
+    console.log("Updating top losers for game"+gameNum);
+    var activeUsersObj = getActiveUsersScoresObj(gameNum);
+    var usersCount = Object.keys(activeUsersObj).length;
+    var sortsScores = [];
+    for (var user in activeUsersObj)
+        sortsScores.push([user, activeUsersObj[user]])
+    sortsScores.sort(
+        function(a, b) {
+            return a[1] - b[1]
+        }
+    )
+
+    /*
+     [ [ 'uGsUXvket6Xu3wAxudulPUUKRfp1', 100 ],
+     [ 'JuBSTYZAWwUND4zAwJ3QHqBAWQo2', 100 ] ]
+
+     */
+    for(var i = 0; i < TOP_LOSERS_THRESHOLD; i++){
+        var uid = sortsScores[usersCount-i][0];
+        var topLoserUserRef = db.ref("users/"+uid+"/topLoserNotifier");
+        topLoserUserRef.set({
+            "usersCount":usersCount,
+            "loserIndex":i+2,
+        })
+        addToArray(topLosersUids,uid);
+    }
+    topLosersLoopCount = 0;
 }
 
 function updateLocalGameObjNewWinner(gameNum,winnerObj) {
