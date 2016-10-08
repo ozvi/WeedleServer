@@ -59,10 +59,9 @@ const TOP_LOSER_LOOP_NOTIFY= 2;
 // const WINNER_TIMEOUT_MILLIS = (1000*60*60)*23;
 const WINNER_TIMEOUT_MILLIS = 1000*60*2;
 const NUM_OF_HELMETS = 2;
-
-
-
+const COMMERCIAL_BREAK_TIME_MILLIS = 1000*20;
 const PNG_RECEIVE_TIMEOUT_MILLIS = 1000*10;
+const  MAX_COMMERCIAL_END_GAME_PERCENT = 95;
 
 
 /*const gamePreset = {gameNum:0,pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[],
@@ -132,6 +131,40 @@ app.post('/file_upload', upload.single('png'), function (req, res, next) {
 
 
 
+function runCommercialBreaks(gameNum) {
+    var gameCommercialRef = db.ref("games/game"+gameNum+"vars/commercialBreak");
+    var timeStampRef = db.ref("timeStamp");
+    updateGameStatus(gameNum,STATUS_COMMERCIAL_BREAK);
+    timeStampRef.set(firebase.database.ServerValue.TIMESTAMP,function(error) {
+        if (error) {
+            console.log('Synchronization failed');
+        } else {
+            timeStampRef.once("value", function(snapshot) {
+                console.log('server timestamp for commercial break: '+snapshot.val());
+                gameCommercialRef.set(snapshot.val() + COMMERCIAL_BREAK_TIME_MILLIS);
+                setTimeout(function() {
+                    gameCommercialRef.set(null);
+                    updateGameStatus(gameNum,STATUS_GAME_RUNNING);
+                },COMMERCIAL_BREAK_TIME_MILLIS);
+
+            }, function (errorObject) {
+                console.log("The read failed: " + errorObject.code);
+            });
+        }
+    });
+
+
+
+
+
+
+}
+
+
+
+
+
+
 
 var addressQueueRef = db.ref('addressQueue');
 var addressQueue = new Queue(addressQueueRef,queueOptions , function(addressTask, progress, resolve, reject) {
@@ -160,7 +193,7 @@ var helmetQueue = new Queue(helmetQueueRef, queueOptions , function(helmetTask, 
 });
 
 
-var pushNotifyQueueRef = db.ref('pushNotifyQueue');
+/*var pushNotifyQueueRef = db.ref('pushNotifyQueue');
 var pushNotifyQueue = new Queue(pushNotifyQueueRef, queueOptions , function(pushNotifyTask, progress, resolve, reject) {
     console.log("push notify me queue arrived!");
     console.log(pushNotifyTask);
@@ -169,8 +202,8 @@ var pushNotifyQueue = new Queue(pushNotifyQueueRef, queueOptions , function(push
     setTimeout(function() {
         resolve();
     }, 0);
-});
-function addUidToPushNotifyList(pushNotifyTask) {
+});*/
+/*function addUidToPushNotifyList(pushNotifyTask) {
     var gameNum = pushNotifyTask.gameNum;
     if(gameNum == 1){
         addToArray(pushNotifyUidListGame1,pushNotifyTask.uid);
@@ -184,7 +217,7 @@ function clearPushNotifyList(gameNum) {
     }else if(gameNum == 2){
         pushNotifyUidListGame2 = [];
     }
-}
+}*/
 
 
 var facebookUserQueueRef = db.ref('facebookUserQueue');
@@ -416,7 +449,7 @@ function getActiveUsersScoresObj(gameNum) {
     }
 }
 function pushNewMedianToGames() {
-    for(i = 0; i < activeGames.length; i++){
+    for(var i = 0; i < activeGames.length; i++){
         var gameNum = i+1;
         var gameObj = getGameObj(gameNum);
 
@@ -432,6 +465,8 @@ function pushNewMedianToGames() {
                 return a[1] - b[1]
             }
         )
+        var topScore = sortsScores[sortsScores.length-1];
+        shouldRunCommercialBreaks(gameObj,topScore);
         console.log("Sorted scores");
         console.log(sortsScores);
         var percent = 0;
@@ -451,6 +486,26 @@ function pushNewMedianToGames() {
     var gameMedianRef =  db.ref("games/game"+gameNum+"vars/medianBarPercent");
         gameMedianRef.set(percent);
     }
+}
+function shouldRunCommercialBreaks(gameObj,topScore) {
+    if(gameObj.status != STATUS_GAME_RUNNING)return;
+    if(topScore == null)return;
+    console.log(gameObj.gameSize);
+    for(var i = 0; i <  gameObj.commercialBreaksPercents.length; i++){
+        var commercialPercent = gameObj.commercialBreaksPercents[i];
+        var scorePercent = (topScore[1]/gameObj.gameSize)*100;
+        if(scorePercent >= MAX_COMMERCIAL_END_GAME_PERCENT)return;
+        if( scorePercent >= commercialPercent){
+            runCommercialBreaks(gameObj.gameNum);
+            deleteFromCommercialBreak(gameObj.gameNum,i);
+        }
+    }
+}
+function deleteFromCommercialBreak(gameNum,index) {
+    if(gameNum == 1)
+         game1.commercialBreaksPercents.splice(index, 1);
+     else if(gameNum == 2)
+         game2.commercialBreaksPercents.splice(index, 1);
 }
 
 function medianCalcInfinateLoop(interval) {
@@ -979,12 +1034,14 @@ function setLocalGameData(gameNum, gameObj) {
         game1.facebookTimerEndSeconds = gameObj.facebookTimerEndSeconds;
         game1.facebookPostMsg = gameObj.facebookPostMsg;
         game1.qWinners = [];
+        game1.commercialBreaksPercents = [];
         game1.gameNum = 1;
     }else  if(gameNum == 2){
         game2.prizeImgUrl = gameObj.prizeImgUrl;
         game2.gameSize = gameObj.gameSize;
         game2.blackList = [];
         game2.qWinners = [];
+        game2.commercialBreaksPercents = [];
         game2.facebookTimerEndSeconds = gameObj.facebookTimerEndSeconds;
         game2.facebookPostMsg = gameObj.facebookPostMsg;
         game2.gameNum = 2;
@@ -1011,7 +1068,10 @@ function makeNewGameTimeout(gameNum,gameObj,gameVarsRef) {
         });
         resetGameScores(gameNum);
         resetLocalGame(gameNum, gameObj);
+        setCommercialBreaksTimes(gameNum, gameObj);
         updateGameStatus(gameNum, STATUS_GAME_RUNNING);
+        console.log("gameObj with commercials");
+        console.log(getGameObj(gameNum));
         console.log("Game"+gameNum+" is now running");
     }, gameObj.secsDelay*1000);
 }
@@ -1019,6 +1079,27 @@ function makeNewGameTimeout(gameNum,gameObj,gameVarsRef) {
 function getCurrentMillis(){
     var d = new Date();
     return d.getTime();
+}
+
+function setCommercialBreaksTimes(gameNum, gameObj) {
+    var percents = [];
+    console.log("game obj from server");
+    console.log(gameObj);
+        for(var i = 0; i < gameObj.commercialBreaks.length; i++){
+            try {
+                var commercial = gameObj.commercialBreaks[i];
+                var percent = Math.floor(Math.random() * (commercial.end-commercial.start)) + commercial.start;
+                console.log("PERCENT: "+percent);
+                addToArray(percents,percent);
+            } catch (e) {
+            }
+        }
+
+    if(gameNum == 1){
+        game1.commercialBreaksPercents = percents;
+    }else if(gameNum == 2){
+        game2.commercialBreaksPercents = percents;
+    }
 }
 
 function calcFutureTimerMillis (millis) {
@@ -1139,7 +1220,7 @@ function verifyGameScore(gameScoreTask) {
     var localGameObj = getGameObj(gameScoreTask.gameNum);
     console.log(localGameObj);
     //TODO MAKE SURE GAME STATUS IS DEFINED
-    if(localGameObj.status != STATUS_GAME_RUNNING)
+    if(localGameObj.status != STATUS_GAME_RUNNING && localGameObj.status != STATUS_COMMERCIAL_BREAK)
         return;
     var gameScoresRef = db.ref("gameScores/game"+gameScoreTask.gameNum+"/"+gameScoreTask.uid);
     var currentTimeMillis = getCurrentMillis();
