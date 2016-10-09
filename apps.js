@@ -168,6 +168,8 @@ function runCommercialBreaks(gameNum) {
 
 var addressQueueRef = db.ref('addressQueue');
 var addressQueue = new Queue(addressQueueRef,queueOptions , function(addressTask, progress, resolve, reject) {
+    console.log("recevied new address queue for "+addressTask.uid);
+    console.log(addressTask);
     validateAddressQueue(addressTask);
     setTimeout(function() {
         resolve();
@@ -278,11 +280,11 @@ function updateHelmetLevelToBillboard(uid,newHelmetLevel) {
 
 
 function validateAddressQueue(addressTask) {
-    for (var winnerUid in timeoutWinners){
-        if (typeof timeoutWinners[winnerUid] !== 'function') {
-            if(addressTask.uid == winnerUid){
-                var userRef =  db.ref('users/'+addressTask.uid+"/address");
-                userRef.set({
+    // for (var winnerUid in timeoutWinners){
+    //     if (typeof timeoutWinners[winnerUid] !== 'function') {
+    //         if(addressTask.uid == winnerUid){
+    var userRef =  db.ref('users/'+addressTask.uid+"/address");
+    userRef.set({
                     "fullName": addressTask.fullName,
                     "address1": addressTask.address1,
                     "address2": addressTask.address2,
@@ -293,10 +295,10 @@ function validateAddressQueue(addressTask) {
                     "phone": addressTask.phone,
                     "comment": addressTask.comment
                 });
-                return;
-            }
-        }
-    }
+                // return;
+            // }
+        // }
+    // }
 }
 
 
@@ -1179,6 +1181,7 @@ var firebaseScoresQueueRef = db.ref('scoresQueue');
 var gameScoresQueue = new Queue(firebaseScoresQueueRef,queueOptions , function(gameScoreTask, progress, resolve, reject) {
     // Read and process task data
     console.log("game score queue received!")
+    console.log(gameScoreTask)
     verifyGameScore(gameScoreTask);
     setTimeout(function() {
         resolve();
@@ -1188,7 +1191,7 @@ var gameScoresQueue = new Queue(firebaseScoresQueueRef,queueOptions , function(g
 //queue exit app
 var firebaseQuitQueueRef = db.ref('quitQueue');
 var quitQueue = new Queue(firebaseQuitQueueRef,queueOptions , function(quitTask, progress, resolve, reject) {
-    // Read and process task data
+    // Read and process task daata
     removeUserFromActiveUsers(quitTask.uid);
     setTimeout(function() {
         resolve();
