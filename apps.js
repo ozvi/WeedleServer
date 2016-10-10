@@ -834,6 +834,7 @@ function publishWinnerDetails(gameNum) {
         "helmetLevel": DEFAULT_HELMET_LEVEL,
         "lastName": winnerObj.lastName,
         "profileImgUrl": winnerObj.profileImgUrl,
+        "prizeName": gameObj.prizeName,
         "prizeImgUrl": gameObj.prizeImgUrl,
         "facebookPostLink": winnerObj.facebookPostLink,
         "timestamp": getCurrentMillis()
@@ -1155,6 +1156,7 @@ function adminGameReset(gameNum) {
                     firstName:serverWinnerObj.firstName,
                     lastName:serverWinnerObj.lastName,
                     profileImgUrl:serverWinnerObj.profileImgUrl,
+                    prizeName:serverWinnerObj.prizeName,
                     facebookPostLink:serverWinnerObj.facebookPostLink
                 };
                 console.log(winnerObj);
