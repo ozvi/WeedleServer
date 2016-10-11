@@ -1033,6 +1033,7 @@ function setLocalGameData(gameNum, gameObj) {
     if(gameNum == 1){
         game1.prizeImgUrl = gameObj.prizeImgUrl;
         game1.gameSize = gameObj.gameSize;
+        game1.prizeName = gameObj.prizeName;
         game1.blackList = [];
         game1.facebookTimerEndSeconds = gameObj.facebookTimerEndSeconds;
         game1.facebookPostMsg = gameObj.facebookPostMsg;
@@ -1042,6 +1043,7 @@ function setLocalGameData(gameNum, gameObj) {
     }else  if(gameNum == 2){
         game2.prizeImgUrl = gameObj.prizeImgUrl;
         game2.gameSize = gameObj.gameSize;
+        game2.prizeName = gameObj.prizeName;
         game2.blackList = [];
         game2.qWinners = [];
         game2.commercialBreaksPercents = [];
