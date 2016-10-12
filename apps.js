@@ -277,7 +277,24 @@ function updateHelmetLevelToBillboard(uid,newHelmetLevel) {
         console.log("The read failed: " + errorObject.code);
     });
 }
+function updateCountryToBillboard(uid,countryName) {
+    var billboardRef = db.ref("billboard");
+    billboardRef.once("value", function(snapshot) {
+        console.log("updating billboard with new helmet level for uid "+uid);
+        snapshot.forEach(function(childSnapshot) {
+            var billboardSingleObj = childSnapshot.val();
+            console.log(billboardSingleObj);
+            console.log("check "+uid+" and uid "+billboardSingleObj.uid);
+            if(uid == billboardSingleObj.uid) {
+                var billboardHelmetRef = db.ref("billboard/"+childSnapshot.key+"/country");
+                billboardHelmetRef.set(countryName);
+            }
+        });
 
+    }, function (errorObject) {
+        console.log("The read failed: " + errorObject.code);
+    });
+}
 
 function validateAddressQueue(addressTask) {
     // for (var winnerUid in timeoutWinners){
@@ -295,6 +312,7 @@ function validateAddressQueue(addressTask) {
                     "phone": addressTask.phone,
                     "comment": addressTask.comment
                 });
+    updateCountryToBillboard(addressTask.uid,addressTask.country);
                 // return;
             // }
         // }
