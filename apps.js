@@ -509,7 +509,7 @@ function pushNewMedianToGames() {
 }
 function shouldRunCommercialBreaks(gameObj,topScore) {
     if(gameObj.status != STATUS_GAME_RUNNING)return;
-    if(topScore == null)return;
+    if(topScore == null || gameObj.commercialBreaksPercents == null)return;
     console.log(gameObj.gameSize);
     for(var i = 0; i <  gameObj.commercialBreaksPercents.length; i++){
         var commercialPercent = gameObj.commercialBreaksPercents[i];
