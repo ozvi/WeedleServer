@@ -1108,6 +1108,7 @@ function setCommercialBreaksTimes(gameNum, gameObj) {
     var percents = [];
     console.log("game obj from server");
     console.log(gameObj);
+    if(gameObj.commercialBreaks == null)return;
         for(var i = 0; i < gameObj.commercialBreaks.length; i++){
             try {
                 var commercial = gameObj.commercialBreaks[i];
