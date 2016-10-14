@@ -253,7 +253,7 @@ function incrementHelmetToUser(uid) {
     userHelmetLevelRef.once("value", function(snapshot) {
         console.log("incrementing helmetLevel to uid "+uid);
         var newHelmetLevel = snapshot.val()+1;
-        if(newHelmetLevel >= MAX_HELMET_LEVEL)
+        if(newHelmetLevel > MAX_HELMET_LEVEL)
             return;
         userRef.update({
             "helmetLevel": newHelmetLevel
