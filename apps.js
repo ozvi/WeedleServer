@@ -28,6 +28,7 @@ const MAX_CLICK_SPEED_MILLIS = 30;
 const MIN_FIRST_COMMIT_SCORE = 2000; // the max allowed first score queue request
 const MIN_ALLOWED_WINNER_SCORE_GAP = 1000;
 const PUSH_NOTIFY_PRE_GAME_MILLIS = 1000;
+const FACEBOOK_POST_WAIT_AFTER_PNG_ARRIVED_MILLIS = 2500;
 const DEFAULT_HELMET_LEVEL = 0;
 const FACEBOOK_POST_URL_PREFIX = "https://www.facebook.com/weedleApp/photos/";
 const FACEBOOK_TOKEN = "EAAQYGxi5eL8BACcpWZBgcdVX1IQtT55OXUiPDiCybtLDpcnli4p9B5YBLAC4bILF6uZCzZAfU3ZAvvdLZCiqLD2BQ8SmIxsp1UAIOYSmQR6YCis6uKdQ4aj9yTYgr6JWd1kcsWV9ZAtPVtHvibhRiUAPQOr5TZAkXAZD";
@@ -126,7 +127,11 @@ app.post('/file_upload', upload.single('png'), function (req, res, next) {
     console.log('game object after png received:');
     console.log(gameObj);
 
-    postToFacebookPage(gameObj,imgFileName);
+
+    setTimeout(function() {
+        postToFacebookPage(gameObj,imgFileName);
+    }, FACEBOOK_POST_WAIT_AFTER_PNG_ARRIVED_MILLIS);
+
 });
 
 
@@ -773,12 +778,12 @@ function getGameObj(gameNum){
 function onWinnerFacebookLogin(winnerObj){
     console.log("winner connected to facebook!");
     var gameNum = getWinnerGameNum(winnerObj.uid);
-    updateGameStatus(gameNum, STATUS_WINNER_LOGGED_IN);
     console.log("winner game num: "+ gameNum);
     if(gameNum === 0) {
         addToBlackList(winnerObj.uid);
         return;
     }
+    updateGameStatus(gameNum, STATUS_WINNER_LOGGED_IN);
     updateLocalGameObjNewWinner(gameNum,winnerObj);
     updateTopLosers(gameNum);
    calcAndPushNewGame(gameNum);
@@ -1021,6 +1026,7 @@ function pushNewGame(gameNum, gameStartTime){
             "gameSize": gameObj.gameSize,
             "prizeImgUrl": gameObj.prizeImgUrl,
             "prizeName": gameObj.prizeName,
+            "showPrizeName": gameObj.showPrizeName,
             "startTimeMillis": gameStartTime+gameObj.secsDelay*1000
         });
         gameVarsRef.update({
@@ -1058,6 +1064,7 @@ function setLocalGameData(gameNum, gameObj) {
         game1.qWinners = [];
         game1.commercialBreaksPercents = [];
         game1.gameNum = 1;
+        // game1.winnerObj = {};
     }else  if(gameNum == 2){
         game2.prizeImgUrl = gameObj.prizeImgUrl;
         game2.gameSize = gameObj.gameSize;
@@ -1068,6 +1075,7 @@ function setLocalGameData(gameNum, gameObj) {
         game2.facebookTimerEndSeconds = gameObj.facebookTimerEndSeconds;
         game2.facebookPostMsg = gameObj.facebookPostMsg;
         game2.gameNum = 2;
+        // game2.winnerObj = {};
     }
 }
 var newGame1Timeout,newGame2Timeout; //global because in some cause will get stopped
