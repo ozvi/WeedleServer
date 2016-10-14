@@ -59,7 +59,7 @@ const TOP_LOSER_LOOP_NOTIFY= 2;
 //TODO REPLACE WITH REAL ONE
 // const WINNER_TIMEOUT_MILLIS = (1000*60*60)*23;
 const WINNER_TIMEOUT_MILLIS = 1000*60*2;
-const NUM_OF_HELMETS = 2;
+const MAX_HELMET_LEVEL = 5;
 const COMMERCIAL_BREAK_TIME_MILLIS = 1000*20;
 const PNG_RECEIVE_TIMEOUT_MILLIS = 1000*10;
 const  MAX_COMMERCIAL_END_GAME_PERCENT = 95;
@@ -253,7 +253,7 @@ function incrementHelmetToUser(uid) {
     userHelmetLevelRef.once("value", function(snapshot) {
         console.log("incrementing helmetLevel to uid "+uid);
         var newHelmetLevel = snapshot.val()+1;
-        if(newHelmetLevel >= NUM_OF_HELMETS)
+        if(newHelmetLevel >= MAX_HELMET_LEVEL)
             return;
         userRef.update({
             "helmetLevel": newHelmetLevel
