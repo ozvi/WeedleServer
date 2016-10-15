@@ -41,7 +41,15 @@ var facebookRequire = require('fb');
 facebookRequire.options({version: 'v2.4'});
 var options = facebookRequire.extend({appId: '1152404564834495', appSecret: '6fe1247db8011460545bd9dc39f81d63'});
 var facebook = new facebookRequire.Facebook(options);
-
+var winnerEmailTitle1 = "Hi {0}, Weedle congratulates you!"
+var winnerEmailContent1 = "{0}you won {2}\n\nYour prize will ship out to you in a few days\nWe'll notify you when your package is shipped\n\nHave a great day\nWeedle team"
+var winnerEmailTitle2 = "Weedle prize tracking info"
+var winnerEmailContent2 = "Hi {0},\n\nYour item was shipped and is on it's way to you\n\nTracking: {2}\nCarrier: {3}\n\nHave a great day\nWeedle team"
+const STATUS_ORDER_FACEBOOK_LOGGEDIN = 0;
+const STATUS_ORDER_SUBMITED_ADDRESS = 1;
+const STATUS_ORDER_FIRST_EMAIL_SENT = 2;
+const STATUS_ORDER_TRACKING_ADDED = 3;
+const STATUS_ORDER_TRACKING_EMAIL_SENT = 4;
 
 
 
@@ -811,17 +819,6 @@ function onWinnerFacebookLogin(winnerObj){
 }
 
 
-var winnerEmailTitle1 = "Hi {0}, Weedle congratulates you!"
-var winnerEmailContent1 = "{0}you won {2}\n\nYour prize will ship out to you in a few days\nWe'll notify you when your package is shipped\n\nHave a great day\nWeedle team"
-var winnerEmailTitle2 = "Weedle prize tracking info"
-var winnerEmailContent2 = "Hi {0},\n\nYour item was shipped and is on it's way to you\n\nTracking: {2}\nCarrier: {3}\n\nHave a great day\nWeedle team"
-const STATUS_ORDER_FACEBOOK_LOGGEDIN = 0;
-const STATUS_ORDER_SUBMITED_ADDRESS = 1;
-const STATUS_ORDER_TRACKING_ADDED = 2;
-const STATUS_ORDER_FIRST_EMAIL_SENT = 3;
-const STATUS_ORDER_TRACKING_EMAIL_SENT = 4;
-
-
 function emailWinner(gameObj,winnerObj,winnerOrderId,orderStatus) {
     var title;
     var content;
@@ -840,18 +837,22 @@ function emailWinner(gameObj,winnerObj,winnerOrderId,orderStatus) {
 }
 
 function emailWinnerTrackingInfo(orderId,childSnapshot) {
+    if(childSnapshot.carrier == null || childSnapshot.carrier == null)return;
     var title = formatString(winnerEmailTitle2, [childSnapshot.firstName]);
     var newStatusIfSuccess = STATUS_ORDER_TRACKING_EMAIL_SENT;
-    var  content = formatString(winnerEmailContent2, [childSnapshot.firstName, childSnapshot.lastName, childSnapshot.tracking.num,childSnapshot.tracking.carrier]);
+    var  content = formatString(winnerEmailContent2, [childSnapshot.firstName, childSnapshot.lastName, childSnapshot.tracking,childSnapshot.carrier]);
     sendEmail(title,content,childSnapshot.email,orderId,newStatusIfSuccess);
 }
 function trackingNumsListener(){
     var ordersRef = db.ref("winnersOrders");
+
     ordersRef.on("value", function(snapshot) {
         snapshot.forEach(function(childSnapshot) {
             var orderId = childSnapshot.key;
-            if(childSnapshot.status == STATUS_ORDER_TRACKING_ADDED){
-                emailWinnerTrackingInfo(orderId,childSnapshot);
+            var gameOrderObj = childSnapshot.val();
+            if(gameOrderObj.status == STATUS_ORDER_TRACKING_ADDED){
+                console.log("STATUS_ORDER_TRACKING_ADDED: " + STATUS_ORDER_TRACKING_ADDED);
+                emailWinnerTrackingInfo(orderId,gameOrderObj);
             }
         });
 
@@ -975,7 +976,9 @@ function publishWinnerDetails(gameNum) {
         "email": winnerObj.email,
         "status": 0
     });
-    emailWinner(gameObj,winnerObj,winnerOrderId,STATUS_ORDER_FACEBOOK_LOGGEDIN);
+    //TODO ACTIVATE EMAIL TO WINNER
+    //TODO SETP HTML WINNER MSG FORMAT
+    // emailWinner(gameObj,winnerObj,winnerOrderId,STATUS_ORDER_FACEBOOK_LOGGEDIN);
 }
 
 
