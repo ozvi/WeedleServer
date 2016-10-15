@@ -137,6 +137,36 @@ app.post('/file_upload', upload.single('png'), function (req, res, next) {
 
 
 
+function emailWinner(orderStatus) {
+    switch (orderStatus){
+        case STATUS_ORDER_FACEBOOK_LOGGEDIN:
+
+            return;
+        case STATUS_ORDER_SUBMITED_ADDRESS:
+
+            return;
+        case STATUS_ORDER_TRACKING_ADDED:
+
+            return;
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function runCommercialBreaks(gameNum) {
     var gameCommercialRef = db.ref("games/game"+gameNum+"vars/commercialBreak");
     var timeStampRef = db.ref("timeStamp");
@@ -270,8 +300,8 @@ function incrementHelmetToUser(uid) {
 }
 
 function updateHelmetLevelToBillboard(uid,newHelmetLevel) {
-    var billboardRef = db.ref("billboard");
-    billboardRef.once("value", function(snapshot) {
+    var winnersOrdersRef = db.ref("winnersOrders");
+    winnersOrdersRef.once("value", function(snapshot) {
         console.log("updating billboard with new helmet level for uid "+uid);
             snapshot.forEach(function(childSnapshot) {
                 var billboardSingleObj = childSnapshot.val();
@@ -288,8 +318,8 @@ function updateHelmetLevelToBillboard(uid,newHelmetLevel) {
     });
 }
 function updateCountryToBillboard(uid,countryName) {
-    var billboardRef = db.ref("billboard");
-    billboardRef.once("value", function(snapshot) {
+    var winnersOrdersRef = db.ref("winnersOrders");
+    winnersOrdersRef.once("value", function(snapshot) {
         console.log("updating billboard with new helmet level for uid "+uid);
         snapshot.forEach(function(childSnapshot) {
             var billboardSingleObj = childSnapshot.val();
@@ -855,10 +885,8 @@ function publishWinnerDetails(gameNum) {
     var gameObj = getGameObj(gameNum);
     var winnerObj = gameObj.winnerObj;
     publishWinnerDetailsToGame(gameNum, winnerObj);
-    var billboardRef = db.ref("billboard");
-    billboardRef.push().set({
+    var billboardObj = {
         "firstName": winnerObj.firstName ,
-        "uid": winnerObj.uid ,
         "helmetLevel": DEFAULT_HELMET_LEVEL,
         "lastName": winnerObj.lastName,
         "profileImgUrl": winnerObj.profileImgUrl,
@@ -866,8 +894,25 @@ function publishWinnerDetails(gameNum) {
         "prizeImgUrl": gameObj.prizeImgUrl,
         "facebookPostLink": winnerObj.facebookPostLink,
         "timestamp": getCurrentMillis()
+    };
+    var billboardRef = db.ref("billboard");
+
+
+    var refWithPush = billboardRef.push();
+    var pushedId = refWithPush.key;
+    console.log("id pushed");
+    console.log(pushedId);
+    refWithPush.set(billboardObj);
+    var winnersOrdersRef = db.ref("winnersOrders/"+pushedId);
+    winnersOrdersRef.set({
+        "timestamp": getCurrentMillis(),
+        "uid": winnerObj.uid,
+        "status": 0,
     });
 }
+
+
+
 function publishWinnerDetailsToGame(gameNum, winnerObj) {
 
     console.log("publishing new winner details!");
