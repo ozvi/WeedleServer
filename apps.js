@@ -19,7 +19,12 @@ var restler = require('restler');
  var poster= require('poster');
 var upload = multer({ dest: 'uploads/' });
 var fs = require('fs');
-
+var nodemailer = require('nodemailer');
+var transporter = nodemailer.createTransport({
+    transport: 'ses', // loads nodemailer-ses-transport
+    accessKeyId: 'AKIAJKXXBPSRORANEKZA',
+    secretAccessKey: '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'
+});
 
 const PORT = 9450;
 const TOP_LOSERS_THRESHOLD = 5;
@@ -64,6 +69,7 @@ const MAX_HELMET_LEVEL = 5;
 const COMMERCIAL_BREAK_TIME_MILLIS = 1000*20;
 const PNG_RECEIVE_TIMEOUT_MILLIS = 1000*10;
 const  MAX_COMMERCIAL_END_GAME_PERCENT = 95;
+const  SELF_EMAIL_ADDRESS = "ozvi.inc@gmail.com";
 
 
 /*const gamePreset = {gameNum:0,pendingWinner:"", status:STATUS_NO_STATUS, facebookTimerEndSeconds:50,blackList:[],qWinners:[],
@@ -134,29 +140,6 @@ app.post('/file_upload', upload.single('png'), function (req, res, next) {
     }, FACEBOOK_POST_WAIT_AFTER_PNG_ARRIVED_MILLIS);
 
 });
-
-
-
-function emailWinner(orderStatus) {
-    switch (orderStatus){
-        case STATUS_ORDER_FACEBOOK_LOGGEDIN:
-
-            return;
-        case STATUS_ORDER_SUBMITED_ADDRESS:
-
-            return;
-        case STATUS_ORDER_TRACKING_ADDED:
-
-            return;
-    }
-
-}
-
-
-
-
-
-
 
 
 
@@ -821,9 +804,67 @@ function onWinnerFacebookLogin(winnerObj){
     updateGameStatus(gameNum, STATUS_WINNER_LOGGED_IN);
     updateLocalGameObjNewWinner(gameNum,winnerObj);
     updateTopLosers(gameNum);
-   calcAndPushNewGame(gameNum);
+     calcAndPushNewGame(gameNum);
     startPngReceiveTimer(gameNum);
+    emailWinner(gameNum,winnerObj,STATUS_ORDER_FACEBOOK_LOGGEDIN);
+
 }
+
+
+var winnerEmailTitle1 = "Hi {0}, Weedle congratulates you!"
+var winnerEmailContent1 = "{0}you won {2}\n\nYour prize will ship out to you in a few days\nWe'll notify you when your package is shipped\n\nHave a great day\nWeedle team"
+var winnerEmailTitle2 = "Weedle prize tracking info"
+var winnerEmailContent2 = "Hi {0},\n\nYour item was shipped and is on it's way to you\n\nTracking: {2}\nCarrier: {3}\n\nHave a great day\nWeedle team"
+const STATUS_ORDER_FACEBOOK_LOGGEDIN = 0;
+const STATUS_ORDER_SUBMITED_ADDRESS = 1;
+const STATUS_ORDER_TRACKING_ADDED = 2;
+const STATUS_ORDER_FIRST_EMAIL_SENT = 3;
+const STATUS_ORDER_TRACKING_EMAIL_SENT = 4;
+
+
+function emailWinner(gameNum,winnerObj,orderStatus) {
+    var gameObj = getGameObj(gameNum);
+    var title;
+    var content;
+    switch (orderStatus) {
+        case STATUS_ORDER_FACEBOOK_LOGGEDIN:
+            title = formatString(winnerEmailTitle1, [winnerObj.firstName]);
+            content = formatString(winnerEmailContent1, [winnerObj.firstName, winnerObj.lastName, gameObj.prizeName]);
+            break;
+        case STATUS_ORDER_SUBMITED_ADDRESS:
+            break;
+        case STATUS_ORDER_TRACKING_ADDED:
+            break;
+    }
+    if(title == null)return;
+    sendEmail(title,content,winnerObj.email);
+
+
+}
+
+function sendEmail(title,content,email) {
+    var mailData = {
+        from: SELF_EMAIL_ADDRESS,
+        to: SELF_EMAIL_ADDRESS,
+        subject: title,
+        text: content,
+        html: content
+    };
+    transporter.sendMail(mailData, function(error, info){
+        if(error){
+            console.log(error);
+        }else{
+            console.log('Message sent: ' + info);
+        }
+    });
+}
+
+
+
+
+
+
+
 
 function updateTopLosers(gameNum) {
     console.log("Updating top losers for game"+gameNum);
