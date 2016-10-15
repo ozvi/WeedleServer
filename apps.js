@@ -44,7 +44,8 @@ var facebook = new facebookRequire.Facebook(options);
 
 //queue options
 var queueOptions = {
-    'numWorkers': 1
+    'numWorkers': 1,
+    'sanitize': false
 };
 
 
@@ -175,6 +176,7 @@ var addressQueueRef = db.ref('addressQueue');
 var addressQueue = new Queue(addressQueueRef,queueOptions , function(addressTask, progress, resolve, reject) {
     console.log("recevied new address queue for "+addressTask.uid);
     console.log(addressTask);
+    addressTask.uid = addressTask._id;
     validateAddressQueue(addressTask);
     setTimeout(function() {
         resolve();
@@ -183,6 +185,7 @@ var addressQueue = new Queue(addressQueueRef,queueOptions , function(addressTask
 
 var iWonQueueRef = db.ref('iWonQueue');
 var iWonQueue = new Queue(iWonQueueRef, queueOptions , function(iWonTask, progress, resolve, reject) {
+    iWonTask.uid = iWonTask._id;
     iWon(iWonTask.uid,iWonTask.gameNum);
     setTimeout(function() {
         resolve();
@@ -193,6 +196,7 @@ var iWonQueue = new Queue(iWonQueueRef, queueOptions , function(iWonTask, progre
 var helmetQueueRef = db.ref('helmetQueue');
 var helmetQueue = new Queue(helmetQueueRef, queueOptions , function(helmetTask, progress, resolve, reject) {
     console.log("recevied new helmet queue for "+helmetTask.uid);
+    helmetTask.uid = helmetTask._id;
     incrementHelmetToUser(helmetTask.uid);
     setTimeout(function() {
         resolve();
@@ -230,6 +234,7 @@ function clearPushNotifyList(gameNum) {
 var facebookUserQueueRef = db.ref('facebookUserQueue');
 var facebookUserQueue = new Queue(facebookUserQueueRef, queueOptions , function(facebookUserTask, progress, resolve, reject) {
     console.log("facebook user queue new facebook account");
+    facebookUserTask.uid = facebookUserTask._id;
     if(isWinnerFacebookLogin(facebookUserTask)){
         onWinnerFacebookLogin(facebookUserTask);
         addTimeoutWinner(facebookUserTask.uid);
@@ -1212,7 +1217,7 @@ var firebaseScoresQueueRef = db.ref('scoresQueue');
 var gameScoresQueue = new Queue(firebaseScoresQueueRef,queueOptions , function(gameScoreTask, progress, resolve, reject) {
     // Read and process task data
     console.log("game score queue received!")
-    console.log(gameScoreTask)
+    gameScoreTask.uid = gameScoreTask._id;
     verifyGameScore(gameScoreTask);
     setTimeout(function() {
         resolve();
@@ -1223,6 +1228,7 @@ var gameScoresQueue = new Queue(firebaseScoresQueueRef,queueOptions , function(g
 var firebaseQuitQueueRef = db.ref('quitQueue');
 var quitQueue = new Queue(firebaseQuitQueueRef,queueOptions , function(quitTask, progress, resolve, reject) {
     // Read and process task daata
+    quitTask.uid = quitTask._id;
     removeUserFromActiveUsers(quitTask.uid);
     setTimeout(function() {
         resolve();
@@ -1233,6 +1239,7 @@ var quitQueue = new Queue(firebaseQuitQueueRef,queueOptions , function(quitTask,
 var firebaseUsersQueueRef = db.ref('usersQueue');
 var newUserQueue = new Queue(firebaseUsersQueueRef,queueOptions , function(newUserTask, progress, resolve, reject) {
     console.log(newUserTask);
+    newUserTask.uid = newUserTask._id;
     // Read and process task data
     addNewUser(newUserTask);
     setTimeout(function() {
