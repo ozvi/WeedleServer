@@ -101,6 +101,8 @@ firebase.initializeApp({
 
 var db = firebase.database();
 medianCalcInfinateLoop(MEDIAN_BAR_INTERVAL);
+trackingNumsListener();
+
 //start the node server
 app.set('port', process.env.PORT || PORT);
 
@@ -804,10 +806,8 @@ function onWinnerFacebookLogin(winnerObj){
     updateGameStatus(gameNum, STATUS_WINNER_LOGGED_IN);
     updateLocalGameObjNewWinner(gameNum,winnerObj);
     updateTopLosers(gameNum);
-     calcAndPushNewGame(gameNum);
+    calcAndPushNewGame(gameNum);
     startPngReceiveTimer(gameNum);
-    emailWinner(gameNum,winnerObj,STATUS_ORDER_FACEBOOK_LOGGEDIN);
-
 }
 
 
@@ -822,27 +822,45 @@ const STATUS_ORDER_FIRST_EMAIL_SENT = 3;
 const STATUS_ORDER_TRACKING_EMAIL_SENT = 4;
 
 
-function emailWinner(gameNum,winnerObj,orderStatus) {
-    var gameObj = getGameObj(gameNum);
+function emailWinner(gameObj,winnerObj,winnerOrderId,orderStatus) {
     var title;
     var content;
+    var newStatusIfSuccess;
     switch (orderStatus) {
         case STATUS_ORDER_FACEBOOK_LOGGEDIN:
             title = formatString(winnerEmailTitle1, [winnerObj.firstName]);
             content = formatString(winnerEmailContent1, [winnerObj.firstName, winnerObj.lastName, gameObj.prizeName]);
+            newStatusIfSuccess = STATUS_ORDER_FIRST_EMAIL_SENT;
             break;
         case STATUS_ORDER_SUBMITED_ADDRESS:
             break;
-        case STATUS_ORDER_TRACKING_ADDED:
-            break;
     }
     if(title == null)return;
-    sendEmail(title,content,winnerObj.email);
-
-
+    sendEmail(title,content,winnerObj.email,winnerOrderId,newStatusIfSuccess);
 }
 
-function sendEmail(title,content,email) {
+function emailWinnerTrackingInfo(orderId,childSnapshot) {
+    var title = formatString(winnerEmailTitle2, [childSnapshot.firstName]);
+    var newStatusIfSuccess = STATUS_ORDER_TRACKING_EMAIL_SENT;
+    var  content = formatString(winnerEmailContent2, [childSnapshot.firstName, childSnapshot.lastName, childSnapshot.tracking.num,childSnapshot.tracking.carrier]);
+    sendEmail(title,content,childSnapshot.email,orderId,newStatusIfSuccess);
+}
+function trackingNumsListener(){
+    var ordersRef = db.ref("winnersOrders");
+    ordersRef.on("value", function(snapshot) {
+        snapshot.forEach(function(childSnapshot) {
+            var orderId = childSnapshot.key;
+            if(childSnapshot.status == STATUS_ORDER_TRACKING_ADDED){
+                emailWinnerTrackingInfo(orderId,childSnapshot);
+            }
+        });
+
+    }, function (errorObject) {
+        console.log("The read failed: " + errorObject.code);
+    });
+}
+
+function sendEmail(title,content,email,winnerOrderId,newStatusIfSuccess) {
     var mailData = {
         from: SELF_EMAIL_ADDRESS,
         to: SELF_EMAIL_ADDRESS,
@@ -855,6 +873,10 @@ function sendEmail(title,content,email) {
             console.log(error);
         }else{
             console.log('Message sent: ' + info);
+            var ordersRef = db.ref("winnersOrders/"+winnerOrderId);
+            ordersRef.update({
+                "status":newStatusIfSuccess
+            })
         }
     });
 }
@@ -940,16 +962,20 @@ function publishWinnerDetails(gameNum) {
 
 
     var refWithPush = billboardRef.push();
-    var pushedId = refWithPush.key;
+    var winnerOrderId = refWithPush.key;
     console.log("id pushed");
-    console.log(pushedId);
+    console.log(winnerOrderId);
     refWithPush.set(billboardObj);
     var winnersOrdersRef = db.ref("winnersOrders/"+pushedId);
     winnersOrdersRef.set({
         "timestamp": getCurrentMillis(),
         "uid": winnerObj.uid,
-        "status": 0,
+        "firstName": winnerObj.firstName,
+        "lastName": winnerObj.lastName,
+        "email": winnerObj.email,
+        "status": 0
     });
+    emailWinner(gameObj,winnerObj,winnerOrderId,STATUS_ORDER_FACEBOOK_LOGGEDIN);
 }
 
 
