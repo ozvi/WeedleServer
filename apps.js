@@ -20,11 +20,7 @@ var restler = require('restler');
 var upload = multer({ dest: 'uploads/' });
 var fs = require('fs');
 var nodemailer = require('nodemailer');
-var transporter = nodemailer.createTransport({
-    transport: 'ses', // loads nodemailer-ses-transport
-    accessKeyId: 'AKIAJKXXBPSRORANEKZA',
-    secretAccessKey: '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'
-});
+
 
 const PORT = 9450;
 const TOP_LOSERS_THRESHOLD = 5;
@@ -36,10 +32,7 @@ const PUSH_NOTIFY_PRE_GAME_MILLIS = 1000;
 const FACEBOOK_POST_WAIT_AFTER_PNG_ARRIVED_MILLIS = 2500;
 const DEFAULT_HELMET_LEVEL = 0;
 const FACEBOOK_POST_URL_PREFIX = "https://www.facebook.com/weedleApp/photos/";
-const FACEBOOK_TOKEN = "EAAQYGxi5eL8BACcpWZBgcdVX1IQtT55OXUiPDiCybtLDpcnli4p9B5YBLAC4bILF6uZCzZAfU3ZAvvdLZCiqLD2BQ8SmIxsp1UAIOYSmQR6YCis6uKdQ4aj9yTYgr6JWd1kcsWV9ZAtPVtHvibhRiUAPQOr5TZAkXAZD";
-var facebookRequire = require('fb');
-facebookRequire.options({version: 'v2.4'});
-var options = facebookRequire.extend({appId: '1152404564834495', appSecret: '6fe1247db8011460545bd9dc39f81d63'});
+
 var facebook = new facebookRequire.Facebook(options);
 var winnerEmailTitle1 = "Hi {0}, Weedle congratulates you!"
 var winnerEmailContent1 = "{0}you won {2}\n\nYour prize will ship out to you in a few days\nWe'll notify you when your package is shipped\n\nHave a great day\nWeedle team"
@@ -99,13 +92,7 @@ var topLosersLoopCount = TOP_LOSERS_THRESHOLD;
 
 
 
-firebase.initializeApp({
-    serviceAccount: "./Weedle-69d94723eed7.json",
-    databaseURL: "https://weedle-27e37.firebaseio.com",
-    databaseAuthVariableOverride: {
-        uid: "server_worker_1"
-    }
-});
+
 
 var db = firebase.database();
 medianCalcInfinateLoop(MEDIAN_BAR_INTERVAL);
