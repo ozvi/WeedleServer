@@ -44,7 +44,26 @@ const STATUS_ORDER_FIRST_EMAIL_SENT = 2;
 const STATUS_ORDER_TRACKING_ADDED = 3;
 const STATUS_ORDER_TRACKING_EMAIL_SENT = 4;
 
+var transporter = nodemailer.createTransport({
+    transport: 'ses', // loads nodemailer-ses-transport
+    accessKeyId: 'AKIAJKXXBPSRORANEKZA',
+    secretAccessKey: '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'
+});
 
+const FACEBOOK_TOKEN = "EAAQYGxi5eL8BACcpWZBgcdVX1IQtT55OXUiPDiCybtLDpcnli4p9B5YBLAC4bILF6uZCzZAfU3ZAvvdLZCiqLD2BQ8SmIxsp1UAIOYSmQR6YCis6uKdQ4aj9yTYgr6JWd1kcsWV9ZAtPVtHvibhRiUAPQOr5TZAkXAZD";
+
+
+var facebookRequire = require('fb');
+facebookRequire.options({version: 'v2.4'});
+var options = facebookRequire.extend({appId: '1152404564834495', appSecret: '6fe1247db8011460545bd9dc39f81d63'});
+
+firebase.initializeApp({
+    serviceAccount: "./Weedle-69d94723eed7.json",
+    databaseURL: "https://weedle-27e37.firebaseio.com",
+    databaseAuthVariableOverride: {
+        uid: "server_worker_1"
+    }
+});
 
 
 
